@@ -22,7 +22,7 @@ Sin SMTP los correos no salen: quedan en la consola. Para probarlos copia `.env.
 2. hPanel → **Sitios web → Agregar sitio web → Aplicación web Node.js → Importar repositorio Git** → conectar GitHub y elegir repo y rama `main`.
 3. Ajustes de compilación: Node 20 o superior · build `npm install` · inicio `npm start` (archivo de entrada `server.js`).
 4. **Variables de entorno** (en el panel, nunca en el repo): `NODE_ENV=production`, `SITE_URL`, `MAIL_TO`, `MAIL_FROM`, `SMTP_HOST=smtp.hostinger.com`, `SMTP_PORT=465`, `SMTP_USER`, `SMTP_PASS` (ver `.env.example`).
-5. Crear el correo `no-reply@newdenimtextil.com` en Hostinger (es el `SMTP_USER`).
+5. Usar el correo `soporte@newdenimtextil.com` de Hostinger como `SMTP_USER` (y `MAIL_FROM`).
 6. Conectar el dominio `newdenimtextil.com` a esta app y también `muestragratis.newdenimtextil.com` (para que redirija).
 7. Desde ahí, cada `git push` a `main` redespliega solo.
 

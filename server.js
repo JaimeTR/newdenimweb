@@ -8,7 +8,7 @@ const fs = require('fs');
 const PUBLIC = path.join(__dirname, 'public');
 const SITE = (process.env.SITE_URL || 'https://newdenimtextil.com').replace(/\/$/, '');
 const MAIL_TO = process.env.MAIL_TO || 'newdenimsac@gmail.com';
-const MAIL_FROM = process.env.MAIL_FROM || 'no-reply@newdenimtextil.com';
+const MAIL_FROM = process.env.MAIL_FROM || 'soporte@newdenimtextil.com';
 const smtp = process.env.SMTP_HOST
   ? nodemailer.createTransport({ host: process.env.SMTP_HOST, port: +(process.env.SMTP_PORT || 465), secure: +(process.env.SMTP_PORT || 465) === 465, auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined })
   : null;

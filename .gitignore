@@ -1,4 +1,22 @@
-node_modules/
+# Secretos: nunca subir (la plantilla .env.example si)
 .env
+.env.*
+!.env.example
+
+# Dependencias y salidas
+node_modules/
+npm-debug.log*
 *.log
+data/
+
+# Paquetes de entrega y temporales
+*.zip
+*.tmp
+.cache/
+
+# Sistema y editores
 .DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

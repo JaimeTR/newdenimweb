@@ -12,7 +12,7 @@ module.exports = ({ S, ico, waI, wa, add, V }) => {
     <p class="lead">Solicita muestras de nuestras telas denim y drill. Ideal para diseñadores, marcas y confeccionistas. La muestra gratis es de hasta <b>1.5 metros</b>; una cantidad mayor tiene costo.</p>
     <div class="btns"><a class="btn dark" href="#solicitar">${ico('send')} Solicitar muestra gratis</a><a class="btn ghost" href="/linea-de-productos/">Ver productos ${ico('arrow')}</a></div>
     <ul class="badges"><li>${ico('gift')} Muestra gratis hasta 1.5 m</li><li>${ico('pin')} Recojo en tienda</li><li>${ico('clock')} Respuesta rápida</li></ul></div>
-  <div class="hero-card reveal in"><div class="swatch s-denim"><span>${ico('layers')} Denim</span><small>Rígido, confort stretch, stretch y super stretch</small></div><div class="swatch s-drill"><span>${ico('layers')} Drill</span><small>Crudos de alta resistencia</small></div></div>
+  <div class="hero-card reveal in"><div class="swatch s-denim"><span>${ico('layers')} Denim</span><small>Rígido, confort, stretch y high stretch</small></div><div class="swatch s-drill"><span>${ico('layers')} Drill</span><small>Crudos: drill rígido, confort y stretch</small></div></div>
 </div></section>`,
     body: `
 <section class="section" id="solicitar-sec"><div class="wrap narrow"><div class="sec-head reveal"><h2 class="sec-title">Solicita tu <em>muestra</em></h2><p class="sec-sub">Dos pasos rápidos. Muestra gratis de hasta 1.5 metros.</p></div>
