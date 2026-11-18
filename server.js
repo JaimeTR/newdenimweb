@@ -42,12 +42,12 @@ const forms = {
   muestra(b) {
     const emp = b.tipo === 'empresa', env = b.entrega === 'envio';
     const tela = clean(b.tela, 20), tipoTela = clean(b.tipo_tela, 20), linea = clean(b.linea, 30), negocio = clean(b.negocio, 50), compra = clean(b.compra, 30);
-    const o = { nombre: clean(b.nombre, 80), razon: clean(b.razon, 100), ruc: digits(b.ruc), celular: cel(b.celular), correo: clean(b.correo, 100), distrito: clean(b.distrito, 60), direccion: clean(b.direccion, 120) };
+    const o = { nombre: clean(b.nombre, 80), razon: clean(b.razon, 100), ruc: digits(b.ruc), dni: digits(b.dni), celular: cel(b.celular), correo: clean(b.correo, 100), distrito: clean(b.distrito, 60), direccion: clean(b.direccion, 120) };
     need(['Denim', 'Drill'].includes(tela), 'Elige un tipo de tela.');
     need((tela === 'Denim' ? ['Rígido', 'Confort', 'Stretch', 'Super stretch'] : ['Rígido', 'Confort', 'Stretch']).includes(tipoTela), 'Elige el tipo de tela.');
     need(['Moda hombre', 'Moda mujer', 'Niños y junior', 'Denim camisero', 'Denim de trabajo'].includes(linea), 'Elige la línea de producto.');
-    if (emp) need(RE.razon.test(o.razon), 'Escribe la razón social.'); else need(RE.nombre.test(o.nombre), 'Escribe tu nombre completo.');
-    need(rucOk(o.ruc), 'RUC no válido.');
+    if (emp) { need(RE.razon.test(o.razon), 'Escribe la razón social.'); need(rucOk(o.ruc), 'RUC no válido.'); }
+    else { need(RE.nombre.test(o.nombre), 'Escribe tu nombre completo.'); need(/^\d{8}$/.test(o.dni), 'El DNI debe tener 8 dígitos.'); }
     need(['Marca propia', 'Maquilador / confección a tercero'].includes(negocio), 'Elige el tipo de negocio.');
     need(['5 a 20 rollos', '20 a 50 rollos', '50 rollos a más'].includes(compra), 'Elige la compra mensual.');
     need(/^9\d{8}$/.test(o.celular), 'El celular debe tener 9 dígitos y empezar con 9.'); need(!o.correo || emailOk(o.correo), 'Ingresa un correo válido.');
@@ -55,7 +55,7 @@ const forms = {
     const who = emp ? o.razon : o.nombre;
     return { kind: 'muestra', who, cel: o.celular, correo: o.correo, waMsg: `Hola ${(emp ? who : o.nombre.split(' ')[0])}, gracias por solicitar tu muestra gratis en New Denim. Te escribimos para coordinar ${env ? 'el envío' : 'el recojo en tienda'}.`,
       subject: `Solicitud de muestra gratis - ${who}`, replyTo: o.correo, next: `/muestra-gratis/gracias/?e=${env ? 'envio' : 'recojo'}`,
-      lines: { 'Tipo de cliente': emp ? 'Empresa' : 'Persona natural', ...(emp ? { 'Razon social': o.razon } : { Nombre: o.nombre }), RUC: o.ruc, Celular: o.celular, Correo: o.correo || '-',
+      lines: { 'Tipo de cliente': emp ? 'Empresa' : 'Persona natural', ...(emp ? { 'Razon social': o.razon, RUC: o.ruc } : { Nombre: o.nombre, DNI: o.dni }), Celular: o.celular, Correo: o.correo || '-',
         Tela: tela, 'Tipo de tela': tipoTela, 'Linea de producto': linea, 'Tipo de negocio': negocio, 'Compra mensual': compra,
         Entrega: env ? 'Envio' : 'Recojo en tienda', ...(env ? { Distrito: o.distrito, Direccion: o.direccion } : {}) } };
   },

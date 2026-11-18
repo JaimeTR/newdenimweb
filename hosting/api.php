@@ -59,12 +59,12 @@ function f_contacto(array $b): array {
 function f_muestra(array $b): array {
     $emp = ($b['tipo'] ?? '') === 'empresa'; $env = ($b['entrega'] ?? '') === 'envio';
     $tela = clean($b['tela'] ?? '', 20); $tipoTela = clean($b['tipo_tela'] ?? '', 20); $linea = clean($b['linea'] ?? '', 30); $negocio = clean($b['negocio'] ?? '', 50); $compra = clean($b['compra'] ?? '', 30);
-    $o = ['nombre' => clean($b['nombre'] ?? '', 80), 'razon' => clean($b['razon'] ?? '', 100), 'ruc' => digits($b['ruc'] ?? ''), 'celular' => cel($b['celular'] ?? ''), 'correo' => clean($b['correo'] ?? '', 100), 'distrito' => clean($b['distrito'] ?? '', 60), 'direccion' => clean($b['direccion'] ?? '', 120)];
+    $o = ['nombre' => clean($b['nombre'] ?? '', 80), 'razon' => clean($b['razon'] ?? '', 100), 'ruc' => digits($b['ruc'] ?? ''), 'dni' => digits($b['dni'] ?? ''), 'celular' => cel($b['celular'] ?? ''), 'correo' => clean($b['correo'] ?? '', 100), 'distrito' => clean($b['distrito'] ?? '', 60), 'direccion' => clean($b['direccion'] ?? '', 120)];
     need(in_array($tela, ['Denim', 'Drill'], true), 'Elige un tipo de tela.');
     need(in_array($tipoTela, $tela === 'Denim' ? ['Rígido', 'Confort', 'Stretch', 'Super stretch'] : ['Rígido', 'Confort', 'Stretch'], true), 'Elige el tipo de tela.');
     need(in_array($linea, ['Moda hombre', 'Moda mujer', 'Niños y junior', 'Denim camisero', 'Denim de trabajo'], true), 'Elige la línea de producto.');
-    if ($emp) need((bool)preg_match(RE_RAZON, $o['razon']), 'Escribe la razón social.'); else need((bool)preg_match(RE_NOMBRE, $o['nombre']), 'Escribe tu nombre completo.');
-    need(ruc_ok($o['ruc']), 'RUC no válido.');
+    if ($emp) { need((bool)preg_match(RE_RAZON, $o['razon']), 'Escribe la razón social.'); need(ruc_ok($o['ruc']), 'RUC no válido.'); }
+    else { need((bool)preg_match(RE_NOMBRE, $o['nombre']), 'Escribe tu nombre completo.'); need((bool)preg_match('/^\d{8}$/', $o['dni']), 'El DNI debe tener 8 dígitos.'); }
     need(in_array($negocio, ['Marca propia', 'Maquilador / confección a tercero'], true), 'Elige el tipo de negocio.');
     need(in_array($compra, ['5 a 20 rollos', '20 a 50 rollos', '50 rollos a más'], true), 'Elige la compra mensual.');
     need((bool)preg_match('/^9\d{8}$/', $o['celular']), 'El celular debe tener 9 dígitos y empezar con 9.');
@@ -72,8 +72,8 @@ function f_muestra(array $b): array {
     if ($env) { need((bool)preg_match(RE_DIREC, $o['direccion']), 'Escribe una dirección válida.'); need((bool)preg_match(RE_LUGAR, $o['distrito']), 'Escribe el distrito.'); }
     $who = $emp ? $o['razon'] : $o['nombre'];
     $lines = ['Tipo de cliente' => $emp ? 'Empresa' : 'Persona natural'];
-    $lines += $emp ? ['Razon social' => $o['razon']] : ['Nombre' => $o['nombre']];
-    $lines += ['RUC' => $o['ruc'], 'Celular' => $o['celular'], 'Correo' => $o['correo'] ?: '-', 'Tela' => $tela, 'Tipo de tela' => $tipoTela, 'Linea de producto' => $linea, 'Tipo de negocio' => $negocio, 'Compra mensual' => $compra, 'Entrega' => $env ? 'Envio' : 'Recojo en tienda'];
+    $lines += $emp ? ['Razon social' => $o['razon'], 'RUC' => $o['ruc']] : ['Nombre' => $o['nombre'], 'DNI' => $o['dni']];
+    $lines += ['Celular' => $o['celular'], 'Correo' => $o['correo'] ?: '-', 'Tela' => $tela, 'Tipo de tela' => $tipoTela, 'Linea de producto' => $linea, 'Tipo de negocio' => $negocio, 'Compra mensual' => $compra, 'Entrega' => $env ? 'Envio' : 'Recojo en tienda'];
     if ($env) $lines += ['Distrito' => $o['distrito'], 'Direccion' => $o['direccion']];
     return ['kind' => 'muestra', 'who' => $who, 'cel' => $o['celular'], 'correo' => $o['correo'],
         'waMsg' => 'Hola ' . ($emp ? $who : explode(' ', $o['nombre'])[0]) . ', gracias por solicitar tu muestra gratis en New Denim. Te escribimos para coordinar ' . ($env ? 'el envío' : 'el recojo en tienda') . '.',

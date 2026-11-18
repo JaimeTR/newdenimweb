@@ -55,9 +55,8 @@
       chk('linea', (v) => v, 'Elige la línea de producto.');
       if (val('entrega') === 'envio') { chk('distrito', (v) => RE.lugar.test(v), 'Escribe el distrito.'); chk('direccion', (v) => RE.direc.test(v), 'Escribe una dirección válida.'); }
     } else {
-      if (emp) chk('razon', (v) => RE.razon.test(v), 'Escribe la razón social (mínimo 3 caracteres).');
-      else chk('nombre', (v) => RE.nombre.test(v), 'Escribe tu nombre completo (solo letras).');
-      chk('ruc', rucOk, 'RUC no válido (11 dígitos, ej. 20100070970).');
+      if (emp) { chk('razon', (v) => RE.razon.test(v), 'Escribe la razón social (mínimo 3 caracteres).'); chk('ruc', rucOk, 'RUC no válido (11 dígitos, ej. 20100070970).'); }
+      else { chk('nombre', (v) => RE.nombre.test(v), 'Escribe tu nombre completo (solo letras).'); chk('dni', (v) => /^\d{8}$/.test(v), 'El DNI debe tener 8 dígitos.'); }
       chk('celular', (v) => /^9\d{8}$/.test(v), 'Debe tener 9 dígitos y empezar con 9.');
       if (g('correo')) chk('correo', (v) => v.length <= 100 && RE.email.test(v), 'Ingresa un correo válido.');
       chk('negocio', (v) => v, 'Elige el tipo de negocio.');
@@ -88,7 +87,7 @@
     const emp = val('tipo') === 'empresa', env = val('entrega') === 'envio', g = (n) => f.elements[n].value.trim().replace(/\s+/g, ' ');
     const tela = f.querySelector('[name=tela]:checked').value;
     const who = emp ? g('razon') : g('nombre');
-    const msg = ['Hola New Denim, solicité una muestra gratis desde la web.', '', `${emp ? 'Empresa: ' : 'Nombre: '}${who}`, `RUC: ${g('ruc')}`, `Celular: ${g('celular')}`,
+    const msg = ['Hola New Denim, solicité una muestra gratis desde la web.', '', `${emp ? 'Empresa: ' : 'Nombre: '}${who}`, emp ? `RUC: ${g('ruc')}` : `DNI: ${g('dni')}`, `Celular: ${g('celular')}`,
       `Tela: ${tela} ${g('tipo_tela').toLowerCase()}`, `Línea: ${g('linea')}`, `Negocio: ${g('negocio')}`, `Compra mensual: ${g('compra')}`,
       env ? `Entrega: envío a ${g('direccion')}, ${g('distrito')}` : 'Entrega: recojo en tienda'].join('\n');
     // Primero se envia el correo; si sale bien se abre WhatsApp con este mensaje y se muestra la pagina de gracias
