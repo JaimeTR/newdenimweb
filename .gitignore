@@ -20,3 +20,7 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+
+# Paquete para hosting compartido (contiene config.php con la clave SMTP)
+dist-php/
+hosting/config.php
