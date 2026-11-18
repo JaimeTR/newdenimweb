@@ -2,12 +2,14 @@
 // Variables de entorno: ver .env.example. Sin SMTP configurado, los envios solo se registran en consola.
 const express = require('express');
 const nodemailer = require('nodemailer');
+const { render } = require('./lib/email');
 const path = require('path');
 const fs = require('fs');
 
 const PUBLIC = path.join(__dirname, 'public');
 const SITE = (process.env.SITE_URL || 'https://newdenimtextil.com').replace(/\/$/, '');
 const MAIL_TO = process.env.MAIL_TO || 'newdenimsac@gmail.com';
+const MAIL_CC = process.env.MAIL_CC ?? 'soporte@newdenimtextil.com';   // copia interna de cada aviso (vacio = sin copia)
 const MAIL_FROM = process.env.MAIL_FROM || 'soporte@newdenimtextil.com';
 const smtp = process.env.SMTP_HOST
   ? nodemailer.createTransport({ host: process.env.SMTP_HOST, port: +(process.env.SMTP_PORT || 465), secure: +(process.env.SMTP_PORT || 465) === 465, auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined })
@@ -33,7 +35,8 @@ const forms = {
     const o = { nombre: clean(b.nombre, 80), empresa: clean(b.empresa, 100), celular: cel(b.celular), correo: clean(b.correo, 100), mensaje: clean(b.mensaje, 1500) };
     need(RE.nombre.test(o.nombre), 'Escribe tu nombre completo.'); need(/^9\d{8}$/.test(o.celular), 'El celular debe tener 9 dígitos y empezar con 9.');
     need(emailOk(o.correo), 'Ingresa un correo válido.'); need(o.mensaje.length >= 10, 'Escribe tu consulta (mínimo 10 caracteres).');
-    return { subject: `Nueva consulta web - ${o.nombre}`, replyTo: o.correo, next: '/gracias/?f=contacto',
+    return { kind: 'contacto', who: o.nombre, cel: o.celular, correo: o.correo, waMsg: `Hola ${o.nombre.split(' ')[0]}, te escribimos de New Denim sobre tu consulta enviada desde la web.`,
+      subject: `Nueva consulta web - ${o.nombre}`, replyTo: o.correo, next: '/gracias/?f=contacto',
       lines: { Nombre: o.nombre, Empresa: o.empresa || '-', Celular: o.celular, Correo: o.correo, Mensaje: o.mensaje } };
   },
   muestra(b) {
@@ -46,7 +49,8 @@ const forms = {
     need(/^9\d{8}$/.test(o.celular), 'El celular debe tener 9 dígitos y empezar con 9.'); need(!o.correo || emailOk(o.correo), 'Ingresa un correo válido.');
     if (env) { need(RE.direc.test(o.direccion), 'Escribe una dirección válida.'); need(!o.distrito || RE.lugar.test(o.distrito), 'Distrito no válido.'); }
     const who = emp ? o.razon : o.nombre;
-    return { subject: `Solicitud de muestra gratis - ${who}`, replyTo: o.correo, next: `/muestra-gratis/gracias/?e=${env ? 'envio' : 'recojo'}`,
+    return { kind: 'muestra', who, cel: o.celular, correo: o.correo, waMsg: `Hola ${(emp ? who : o.nombre.split(' ')[0])}, gracias por solicitar tu muestra gratis en New Denim. Te escribimos para coordinar ${env ? 'el envío' : 'el recojo en tienda'}.`,
+      subject: `Solicitud de muestra gratis - ${who}`, replyTo: o.correo, next: `/muestra-gratis/gracias/?e=${env ? 'envio' : 'recojo'}`,
       lines: { 'Tipo de cliente': emp ? 'Empresa' : 'Persona natural', ...(emp ? { 'Razon social': o.razon, RUC: o.ruc } : { Nombre: o.nombre, DNI: o.dni || '-' }),
         Celular: o.celular, Correo: o.correo || '-', Entrega: env ? 'Envio' : 'Recojo en tienda', ...(env ? { Distrito: o.distrito || '-', Direccion: o.direccion } : {}), Telas: telas.join(', ') } };
   },
@@ -57,22 +61,36 @@ const forms = {
     need(!o.correo || emailOk(o.correo), 'Ingresa un correo válido.'); need(o.domicilio.length >= 5, 'Escribe tu domicilio.'); need(!o.monto || /^\d{1,7}(\.\d{1,2})?$/.test(o.monto), 'Monto no válido.');
     need(o.detalle.length >= 10 && o.pedido.length >= 5, 'Completa el detalle y el pedido.');
     const d = new Date(), p = (n) => String(n).padStart(2, '0'), n = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
-    return { subject: `Libro de reclamaciones N° ${n} - ${o.nombre}`, replyTo: o.correo, copyTo: o.correo, next: `/gracias/?f=reclamo&n=${n}`,
+    return { kind: 'reclamo', who: o.nombre, cel: o.celular, correo: o.correo, waMsg: `Hola ${o.nombre.split(' ')[0]}, te escribimos de New Denim sobre tu hoja de reclamación N° ${n}.`,
+      subject: `Libro de reclamaciones N° ${n} - ${o.nombre}`, replyTo: o.correo, copyTo: o.correo, next: `/gracias/?f=reclamo&n=${n}`,
       lines: { 'N° de hoja': n, Fecha: d.toLocaleString('es-PE', { timeZone: 'America/Lima' }), Tipo: b.tipo === 'queja' ? 'Queja' : 'Reclamo', Documento: `${o.tipo_doc} ${o.doc}`, Nombre: o.nombre, Celular: o.celular, Correo: o.correo || '-',
         Domicilio: o.domicilio, 'Bien contratado': b.bien === 'servicio' ? 'Servicio' : 'Producto', 'Monto reclamado': o.monto || '-', Descripcion: o.descripcion || '-', Detalle: o.detalle, 'Pedido del consumidor': o.pedido } };
   },
 };
 
+const LOGO = [{ filename: 'nd.png', path: require('path').join(__dirname, 'lib', 'email-logo.png'), cid: 'nd-logo' }];
 async function send(r) {
   const text = Object.entries(r.lines).map(([k, v]) => `${k}: ${v}`).join('\n');
   console.log(`[${new Date().toISOString()}] ${r.subject}\n${text}\n`);     // copia en los logs de Hostinger
   if (!smtp) return false;
   try {
-    await smtp.sendMail({ from: `New Denim Web <${MAIL_FROM}>`, to: MAIL_TO, replyTo: r.replyTo || undefined, subject: r.subject, text });
-    if (r.copyTo) await smtp.sendMail({ from: `New Denim SAC <${MAIL_FROM}>`, to: r.copyTo, subject: `Copia de tu hoja - ${r.subject}`, text: `New Denim SAC recibió tu hoja de reclamación. Te responderemos en un plazo máximo de 15 días hábiles.\n\n${text}` });
+    const a = render(r.kind, r.lines, r);
+    await smtp.sendMail({ from: `New Denim Web <${MAIL_FROM}>`, to: MAIL_TO, cc: MAIL_CC || undefined, replyTo: r.replyTo || undefined, subject: r.subject, text: a.text, html: a.html, attachments: LOGO });
+    if (r.copyTo) {   // copia para el cliente (solo libro de reclamaciones)
+      const c = render('copia', r.lines, { who: r.who.split(' ')[0] });
+      await smtp.sendMail({ from: `New Denim SAC <${MAIL_FROM}>`, to: r.copyTo, subject: `Copia de tu hoja - ${r.subject}`, text: c.text, html: c.html, attachments: LOGO });
+    }
     return true;
   } catch (e) { console.error('MAIL-FAIL', e.message); return false; }
 }
+
+// Vista previa de los correos (solo en desarrollo): /__preview/contacto | muestra | reclamo | copia
+const SAMPLES = {
+  contacto: { who: 'Ana Pérez Soto', cel: '987654321', correo: 'ana@correo.com', waMsg: 'Hola Ana, te escribimos de New Denim.', lines: { Nombre: 'Ana Pérez Soto', Empresa: 'Confecciones Ana', Celular: '987654321', Correo: 'ana@correo.com', Mensaje: 'Hola, busco denim stretch para una colección de jeans. Necesito unos 300 metros y quisiera conocer precios por mayor.' } },
+  muestra: { who: 'Confecciones Ana S.A.C.', cel: '987654321', correo: '', waMsg: 'Hola, gracias por solicitar tu muestra gratis.', lines: { 'Tipo de cliente': 'Empresa', 'Razon social': 'Confecciones Ana S.A.C.', RUC: '20100070970', Celular: '987654321', Correo: '-', Entrega: 'Envio', Distrito: 'Ate', Direccion: 'Av. Lima 123', Telas: 'Denim, Drill' } },
+  reclamo: { who: 'Luis Gómez', cel: '987654321', correo: 'luis@correo.com', waMsg: 'Hola Luis, sobre tu hoja de reclamación.', lines: { 'N° de hoja': '20261118-154249', Fecha: '18/11/2026 15:42', Tipo: 'Reclamo', Documento: 'DNI 12345678', Nombre: 'Luis Gómez', Celular: '987654321', Correo: 'luis@correo.com', Domicilio: 'Av. Lima 123', 'Bien contratado': 'Producto', 'Monto reclamado': '150.50', Descripcion: 'Drill crudo', Detalle: 'La tela llegó con manchas en el borde del rollo.', 'Pedido del consumidor': 'Cambio del producto.' } },
+};
+SAMPLES.copia = { ...SAMPLES.reclamo, who: 'Luis' };
 
 // ---------- app ----------
 const app = express();
@@ -81,6 +99,7 @@ app.set('trust proxy', 1);
 
 app.use((req, res, next) => {
   const host = (req.headers.host || '').toLowerCase();
+  if (/^qr\./.test(host) && req.path === '/') return res.redirect(301, SITE + '/links/');                      // el enlace/QR viejo del Linktree
   if (/^(muestragratis|pruebagratis)\./.test(host)) return res.redirect(301, SITE + '/muestra-gratis/');   // el QR del camion sigue funcionando
   if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] === 'http') return res.redirect(301, 'https://' + host + req.originalUrl);
   res.set({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'SAMEORIGIN' });
@@ -101,6 +120,12 @@ app.post('/api/:form', express.urlencoded({ extended: false, limit: '30kb' }), a
   const ok = await send(r);
   res.redirect(303, r.next + (ok ? '' : (r.next.includes('?') ? '&' : '?') + 'm=0'));
 });
+
+if (process.env.NODE_ENV !== 'production') app.get('/__preview/:k', (req, res) => {
+  const k = req.params.k, d = SAMPLES[k]; if (!d) return res.status(404).end();
+  res.type('html').send(render(k, d.lines, d).html.replace('cid:nd-logo', '/__preview-logo.png'));
+});
+app.get('/__preview-logo.png', (req, res) => process.env.NODE_ENV === 'production' ? res.status(404).end() : res.sendFile(require('path').join(__dirname, 'lib', 'email-logo.png')));
 
 app.use(express.static(PUBLIC, { extensions: ['html'], maxAge: '30d', setHeaders: (res, f) => { if (f.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache'); } }));
 app.use((req, res) => res.status(404).sendFile(path.join(PUBLIC, '404.html')));

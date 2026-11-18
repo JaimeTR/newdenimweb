@@ -26,15 +26,15 @@ module.exports = ({ S, ico, waI, wa, add, V }) => {
       <div class="seg" role="radiogroup" id="seg2" data-on="0" aria-label="Forma de entrega"><i class="seg-bar"></i>
         <label><input type="radio" name="entrega" value="recojo" checked><span>${ico('pin')} Recojo en tienda</span></label><label><input type="radio" name="entrega" value="envio"><span>${ico('truck')} Envío</span></label></div>
       <p class="store-note ent ent-recojo">${ico('pin')} <span>Recoge en <b>${S.addrShort}</b>. Te avisamos cuando estén listas.</span></p>
-      <div class="grid ent ent-envio" hidden>${inp('Distrito / ciudad', 'distrito', 'pin', { hid: 1, attr: 'maxlength="60"' })}${inp('Dirección de envío *', 'direccion', 'truck', { hid: 1, attr: 'maxlength="120" autocomplete="street-address"' })}</div>
+      <div class="grid ent ent-envio" hidden>${inp('Distrito / ciudad', 'distrito', 'pin', { hid: 1, attr: 'maxlength="60" data-fmt="name"' })}${inp('Dirección de envío *', 'direccion', 'truck', { hid: 1, attr: 'maxlength="120" data-fmt="addr" autocomplete="street-address"' })}</div>
     </fieldset>
     <fieldset class="step" hidden><legend><span class="num">2</span> Tus datos</legend>
       <div class="seg" role="radiogroup" id="seg" data-on="0" aria-label="Tipo de cliente"><i class="seg-bar"></i>
         <label><input type="radio" name="tipo" value="natural" checked><span>${ico('user')} Persona natural</span></label><label><input type="radio" name="tipo" value="empresa"><span>${ico('build')} Empresa</span></label></div>
       <div class="grid gap" id="grid">
-        ${inp('Razón social *', 'razon', 'build', { cls: 'only-emp', hid: 1, attr: 'maxlength="100" autocomplete="organization"' })}${inp('RUC *', 'ruc', 'id', { cls: 'only-emp', hid: 1, attr: 'inputmode="numeric" maxlength="11" data-fmt="num" placeholder="11 dígitos"' })}
-        ${inp('Nombre completo *', 'nombre', 'user', { cls: 'only-nat', attr: 'maxlength="80" autocomplete="name"' })}${inp('DNI <small>(opcional)</small>', 'dni', 'id', { cls: 'only-nat', attr: 'inputmode="numeric" maxlength="8" data-fmt="num" placeholder="8 dígitos"' })}
-        ${inp('Celular / WhatsApp *', 'celular', 'phone', { attr: 'type="tel" inputmode="numeric" maxlength="18" data-fmt="cel" autocomplete="tel" placeholder="9XX XXX XXX"' })}${inp('Correo <small>(opcional)</small>', 'correo', 'mail', { attr: 'type="email" maxlength="100" autocomplete="email"' })}
+        ${inp('Razón social *', 'razon', 'build', { cls: 'only-emp', hid: 1, attr: 'maxlength="100" data-fmt="biz" autocomplete="organization"' })}${inp('RUC *', 'ruc', 'id', { cls: 'only-emp', hid: 1, attr: 'inputmode="numeric" maxlength="11" data-fmt="num" placeholder="11 dígitos"' })}
+        ${inp('Nombre completo *', 'nombre', 'user', { cls: 'only-nat', attr: 'maxlength="80" data-fmt="name" autocomplete="name"' })}${inp('DNI <small>(opcional)</small>', 'dni', 'id', { cls: 'only-nat', attr: 'inputmode="numeric" maxlength="8" data-fmt="num" placeholder="8 dígitos"' })}
+        ${inp('Celular / WhatsApp *', 'celular', 'phone', { attr: 'type="tel" inputmode="numeric" maxlength="18" data-fmt="cel" autocomplete="tel" placeholder="9XX XXX XXX"' })}${inp('Correo <small>(opcional)</small>', 'correo', 'mail', { attr: 'type="email" maxlength="100" data-fmt="mail" autocomplete="email"' })}
         <p class="wa-note full">${waI} Toda la coordinación se realizará por WhatsApp.</p></div>
     </fieldset>
   </div>

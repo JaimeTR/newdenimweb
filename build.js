@@ -7,6 +7,8 @@ const S = {
   wa: '51981033383', tel1: '+51 981 033 383', tel1raw: '51981033383', tel2: '+51 946 340 287', tel2raw: '51946340287',
   mail1: 'info@newdenimtextil.com', mail2: 'soporte@newdenimtextil.com',
   addr: 'Jirón Luis Giribaldi 624 Tda 06, La Victoria, Lima, Perú', addrShort: 'Giribaldi 624 Tda 06, La Victoria, Lima',
+  mapQ: 'New Denim - Distribuidor textil, Jr. Luis Giribaldi 624, La Victoria 15018, Lima, Perú',   // consulta que ubica el pin correcto en Google Maps
+  tel2label: 'Asesor 2',
   ig: 'https://www.instagram.com/newdenim_textil/', tk: 'https://www.tiktok.com/@newdenim_textil',
   fb: '', li: '',   // pegar aqui las URLs reales de Facebook/LinkedIn para que aparezcan en el sitio
 };
@@ -32,6 +34,8 @@ const P = {
   user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
   build: '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>',
   id: '<rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><path d="M13 10h5M13 14h5"/>',
+  msg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  coin: '<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/>',
   ig: '<rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/>',
   fb: '<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>',
   li: '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/>',
@@ -100,7 +104,6 @@ function layout({ file, title, desc, body, hero = '', og = 'og.jpg', noindex = f
   <div class="wrap bar">
     <a class="brand" href="/" aria-label="New Denim - Inicio"><img src="/assets/img/nd-gold.svg" alt=""><span><b>New Denim</b><small>Distribuidor Textil</small></span></a>
     <nav class="mainnav" id="menu" aria-label="Principal">${navHtml}<a class="navcta" href="/muestra-gratis/"${cur.startsWith('/muestra-gratis') ? ' aria-current="page"' : ''}>Muestra gratis</a></nav>
-    <a class="hdr-phone" href="tel:+${S.tel1raw}" aria-label="Llamar al ${S.tel1}">${ico('phone')} <span>${S.tel1}</span></a>
     <button class="burger" id="burger" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu">${ico('menu')}</button>
   </div>
 </header>
@@ -120,11 +123,33 @@ ${hero}${body}
       <a href="https://wa.me/${S.wa}" target="_blank" rel="noopener">${waI} ${S.tel1}</a>
       <a href="tel:+${S.tel2raw}">${ico('phone')} ${S.tel2}</a>
       <a href="mailto:${S.mail1}">${ico('mail')} ${S.mail1}</a>
-      <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.addr)}" target="_blank" rel="noopener">${ico('pin')} ${S.addrShort}</a></div>
+      <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.mapQ)}" target="_blank" rel="noopener">${ico('pin')} ${S.addrShort}</a></div>
   </div>
   <div class="wrap copy"><span>&copy; ${new Date().getFullYear()} New Denim SAC. Todos los derechos reservados.</span>
     <span><a href="/libro-de-reclamaciones/">Libro de reclamaciones</a><a href="/terminos-y-condiciones/">Términos</a><a href="/politica-de-privacidad/">Privacidad</a><a href="/accesibilidad/">Accesibilidad</a></span></div>
 </footer>
+<div class="cw" id="cw">
+  <div class="cw-back" id="cwBack"></div>
+  <div class="cw-panel" id="cwPanel" role="dialog" aria-label="Contacto rápido" hidden>
+    <div class="cw-head">
+      <img src="/assets/img/nd-gold.svg" alt="" width="46" height="35">
+      <div><b>New Denim</b><small><i></i> Asesores disponibles por WhatsApp</small></div>
+      <button type="button" class="cw-x" id="cwX" aria-label="Cerrar"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="cw-body">
+      <p class="cw-hi">Hola 👋 ¿En qué podemos ayudarte? Elige un asesor y te respondemos.</p>
+      <a class="cw-row wa" href="${wa('Hola New Denim, deseo más información')}" target="_blank" rel="noopener"><i>${waI}</i><span><small>Asesor 1</small><b>${S.tel1}</b></span><em>Chatear</em></a>
+      <a class="cw-row wa" href="https://wa.me/${S.tel2raw}?text=${encodeURIComponent('Hola New Denim, deseo más información')}" target="_blank" rel="noopener"><i>${waI}</i><span><small>Asesor 2</small><b>${S.tel2}</b></span><em>Chatear</em></a>
+      <div class="cw-sep"><span>o prefieres llamar</span></div>
+      <div class="cw-calls">
+        <a href="tel:+${S.tel1raw}">${ico('phone')}<span>Asesor 1</span></a>
+        <a href="tel:+${S.tel2raw}">${ico('phone')}<span>Asesor 2</span></a>
+      </div>
+    </div>
+  </div>
+  <div class="cw-hint" id="cwHint">¿Hablamos? <b>Escríbenos</b></div>
+  <button type="button" class="cw-fab" id="cwBtn" aria-expanded="false" aria-controls="cwPanel" aria-label="Chat y llamadas"><span class="o">${waI}</span><span class="c"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></span></button>
+</div>
 <script src="/assets/js/main.js?v=${V('js/main.js')}" defer></script>${script}
 </body>
 </html>
@@ -269,7 +294,15 @@ ${ficha('71119', 'Denim Lucas', 'ficha-lucas', '1.70 m', '12 oz', 'Tela con hilo
 });
 
 // ---------- CONTACTO ----------
-const field = (label, name, o = {}) => `<label class="f${o.full ? ' full' : ''}">${label}${o.tag === 'textarea' ? `<textarea name="${name}" rows="${o.rows || 5}" maxlength="${o.max || 1500}" data-v="${o.v}"${o.ph ? ` placeholder="${o.ph}"` : ''}></textarea>` : o.tag === 'select' ? `<select name="${name}">${o.opts.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select>` : `<input name="${name}" type="${o.type || 'text'}"${o.fmt ? ` data-fmt="${o.fmt}" inputmode="numeric"` : ''}${o.max ? ` maxlength="${o.max}"` : ''}${o.ph ? ` placeholder="${o.ph}"` : ''}${o.auto ? ` autocomplete="${o.auto}"` : ''}${o.v ? ` data-v="${o.v}"` : ''}>`}</label>`;
+const ICON = { nombre: 'user', empresa: 'build', correo: 'mail', celular: 'phone', mensaje: 'msg', tipo_doc: 'id', doc: 'id', domicilio: 'pin', bien: 'layers', monto: 'coin', descripcion: 'layers', tipo: 'msg', detalle: 'msg', pedido: 'check' };
+const FMT = { nombre: 'name', empresa: 'biz', domicilio: 'addr', correo: 'mail', monto: 'money', doc: 'num', celular: 'cel' };
+const field = (label, name, o = {}) => {
+  const ic = ico(ICON[name] || 'msg'), fmt = FMT[name] || o.fmt, at = `name="${name}"${fmt ? ` data-fmt="${fmt}"` : ''}${fmt === 'num' || fmt === 'cel' || fmt === 'money' ? ' inputmode="numeric"' : ''}${o.max ? ` maxlength="${o.max}"` : ''}${o.ph ? ` placeholder="${o.ph}"` : ''}${o.auto ? ` autocomplete="${o.auto}"` : ''}${o.v ? ` data-v="${o.v}"` : ''}`;
+  const ctl = o.tag === 'textarea' ? `<span class="in ta">${ic}<textarea ${at} rows="${o.rows || 5}" maxlength="${o.max || 1500}"></textarea></span>`
+    : o.tag === 'select' ? `<span class="in">${ic}<select name="${name}">${o.opts.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select></span>`
+    : `<span class="in">${ic}<input type="${o.type || 'text'}" ${at}></span>`;
+  return `<label class="f${o.full ? ' full' : ''}">${label}${ctl}</label>`;
+};
 const hid = (form) => `<input type="hidden" name="form" value="${form}"><input type="hidden" name="t" value=""><input type="text" name="web" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">`;
 add({
   file: 'contacto', title: 'Contacto | New Denim - Telas Denim y Drill en La Victoria, Lima',
@@ -277,12 +310,12 @@ add({
   hero: pageHero('Contacto', 'Estamos aquí para <em>ayudarte</em>', 'Si tienes preguntas o necesitas más información sobre nuestros productos, ponte en contacto con nuestro equipo por nuestros canales de atención.'),
   body: `<section class="section"><div class="wrap contact">
   <div class="cinfo reveal">
-    <div class="cbox"><i>${ico('pin')}</i><div><b>Nuestra dirección</b><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.addr)}" target="_blank" rel="noopener">${S.addr}</a></div></div>
+    <div class="cbox"><i>${ico('pin')}</i><div><b>Nuestra dirección</b><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.mapQ)}" target="_blank" rel="noopener">${S.addr}</a></div></div>
     <div class="cbox"><i>${ico('phone')}</i><div><b>Número de contacto</b><a href="tel:+${S.tel1raw}">${S.tel1}</a><a href="tel:+${S.tel2raw}">${S.tel2}</a></div></div>
     <div class="cbox"><i>${ico('mail')}</i><div><b>Correos</b><a href="mailto:${S.mail1}">${S.mail1}</a><a href="mailto:${S.mail2}">${S.mail2}</a></div></div>
     <div class="btns"><a class="btn wa" href="${wa('Hola New Denim, quiero información sobre sus telas.')}" target="_blank" rel="noopener">${waI} Escribir por WhatsApp</a></div>
     <div class="social">${social()}</div>
-    <iframe class="map" title="Ubicación de New Denim en Google Maps" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=${encodeURIComponent(S.addr)}&t=m&z=16&output=embed"></iframe>
+    <iframe class="map" title="Ubicación de New Denim en Google Maps" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=${encodeURIComponent(S.mapQ)}&t=m&z=16&output=embed"></iframe>
   </div>
   <div class="card reveal" style="transition-delay:100ms"><h2>Formulario de contacto</h2><p>Envíanos tu mensaje y te responderemos pronto.</p>
     <form method="post" action="/api/contacto" data-form novalidate>${hid('contacto')}<div class="grid">
@@ -360,6 +393,7 @@ add({
 });
 
 require('./tools/muestra-pages.js')({ S, ico, waI, wa, add, V });
+require('./tools/links-page.js')({ S, ico, waI, tkI, wa, V, esc, fs, path, OUT });
 
 // ---------- escribir ----------
 for (const p of pages) {
@@ -367,7 +401,7 @@ for (const p of pages) {
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.writeFileSync(dest, layout(p));
 }
-const urls = pages.filter((p) => !p.noindex).map((p) => (p.file === '' ? '/' : '/' + p.file + '/'));
+const urls = pages.filter((p) => !p.noindex).map((p) => (p.file === '' ? '/' : '/' + p.file + '/')).concat('/links/');
 fs.writeFileSync(path.join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${S.url}${u}</loc><changefreq>monthly</changefreq><priority>${u === '/' ? '1.0' : '0.8'}</priority></url>`).join('\n')}\n</urlset>\n`);
 fs.writeFileSync(path.join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /data/\nSitemap: ${S.url}/sitemap.xml\n`);
 console.log(pages.length + ' paginas generadas');

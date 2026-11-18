@@ -32,9 +32,7 @@
   }
   f.querySelectorAll('[name=tipo],[name=entrega]').forEach((r) => r.addEventListener('change', apply));
   apply();
-  f.querySelectorAll('[data-fmt]').forEach((el) => el.addEventListener('input', () => {
-    el.value = el.dataset.fmt === 'cel' ? celNorm(el.value) : el.value.replace(/\D/g, '').slice(0, el.maxLength);
-  }));
+  f.querySelectorAll('[data-fmt]').forEach((el) => el.addEventListener('input', () => ndFmt(el)));
 
   function errorsOf(i) {
     const emp = val('tipo') === 'empresa', bad = [];
