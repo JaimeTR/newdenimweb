@@ -41,18 +41,23 @@ const forms = {
   },
   muestra(b) {
     const emp = b.tipo === 'empresa', env = b.entrega === 'envio';
-    const telas = [].concat(b['telas[]'] ?? b.telas ?? []).map((t) => clean(t, 20)).filter((t) => ['Denim', 'Drill'].includes(t));
-    const o = { nombre: clean(b.nombre, 80), dni: digits(b.dni), razon: clean(b.razon, 100), ruc: digits(b.ruc), celular: cel(b.celular), correo: clean(b.correo, 100), distrito: clean(b.distrito, 60), direccion: clean(b.direccion, 120) };
-    need(telas.length, 'Elige al menos un tipo de tela.');
-    if (emp) { need(RE.razon.test(o.razon), 'Escribe la razón social.'); need(rucOk(o.ruc), 'RUC no válido.'); }
-    else { need(RE.nombre.test(o.nombre), 'Escribe tu nombre completo.'); need(!o.dni || /^\d{8}$/.test(o.dni), 'El DNI tiene 8 dígitos.'); }
+    const tela = clean(b.tela, 20), tipoTela = clean(b.tipo_tela, 20), linea = clean(b.linea, 30), negocio = clean(b.negocio, 50), compra = clean(b.compra, 30);
+    const o = { nombre: clean(b.nombre, 80), razon: clean(b.razon, 100), ruc: digits(b.ruc), celular: cel(b.celular), correo: clean(b.correo, 100), distrito: clean(b.distrito, 60), direccion: clean(b.direccion, 120) };
+    need(['Denim', 'Drill'].includes(tela), 'Elige un tipo de tela.');
+    need((tela === 'Denim' ? ['Rígido', 'Confort', 'Stretch', 'Super stretch'] : ['Rígido', 'Confort', 'Stretch']).includes(tipoTela), 'Elige el tipo de tela.');
+    need(['Moda hombre', 'Moda mujer', 'Niños y junior', 'Denim camisero', 'Denim de trabajo'].includes(linea), 'Elige la línea de producto.');
+    if (emp) need(RE.razon.test(o.razon), 'Escribe la razón social.'); else need(RE.nombre.test(o.nombre), 'Escribe tu nombre completo.');
+    need(rucOk(o.ruc), 'RUC no válido.');
+    need(['Marca propia', 'Maquilador / confección a tercero'].includes(negocio), 'Elige el tipo de negocio.');
+    need(['5 a 20 rollos', '20 a 50 rollos', '50 rollos a más'].includes(compra), 'Elige la compra mensual.');
     need(/^9\d{8}$/.test(o.celular), 'El celular debe tener 9 dígitos y empezar con 9.'); need(!o.correo || emailOk(o.correo), 'Ingresa un correo válido.');
-    if (env) { need(RE.direc.test(o.direccion), 'Escribe una dirección válida.'); need(!o.distrito || RE.lugar.test(o.distrito), 'Distrito no válido.'); }
+    if (env) { need(RE.direc.test(o.direccion), 'Escribe una dirección válida.'); need(RE.lugar.test(o.distrito), 'Escribe el distrito.'); }
     const who = emp ? o.razon : o.nombre;
     return { kind: 'muestra', who, cel: o.celular, correo: o.correo, waMsg: `Hola ${(emp ? who : o.nombre.split(' ')[0])}, gracias por solicitar tu muestra gratis en New Denim. Te escribimos para coordinar ${env ? 'el envío' : 'el recojo en tienda'}.`,
       subject: `Solicitud de muestra gratis - ${who}`, replyTo: o.correo, next: `/muestra-gratis/gracias/?e=${env ? 'envio' : 'recojo'}`,
-      lines: { 'Tipo de cliente': emp ? 'Empresa' : 'Persona natural', ...(emp ? { 'Razon social': o.razon, RUC: o.ruc } : { Nombre: o.nombre, DNI: o.dni || '-' }),
-        Celular: o.celular, Correo: o.correo || '-', Entrega: env ? 'Envio' : 'Recojo en tienda', ...(env ? { Distrito: o.distrito || '-', Direccion: o.direccion } : {}), Telas: telas.join(', ') } };
+      lines: { 'Tipo de cliente': emp ? 'Empresa' : 'Persona natural', ...(emp ? { 'Razon social': o.razon } : { Nombre: o.nombre }), RUC: o.ruc, Celular: o.celular, Correo: o.correo || '-',
+        Tela: tela, 'Tipo de tela': tipoTela, 'Linea de producto': linea, 'Tipo de negocio': negocio, 'Compra mensual': compra,
+        Entrega: env ? 'Envio' : 'Recojo en tienda', ...(env ? { Distrito: o.distrito, Direccion: o.direccion } : {}) } };
   },
   reclamo(b) {
     const o = { nombre: clean(b.nombre, 80), tipo_doc: ['DNI', 'CE', 'RUC', 'Pasaporte'].includes(b.tipo_doc) ? b.tipo_doc : 'DNI', doc: digits(b.doc), celular: cel(b.celular), correo: clean(b.correo, 100), domicilio: clean(b.domicilio, 120),
@@ -87,7 +92,7 @@ async function send(r) {
 // Vista previa de los correos (solo en desarrollo): /__preview/contacto | muestra | reclamo | copia
 const SAMPLES = {
   contacto: { who: 'Ana Pérez Soto', cel: '987654321', correo: 'ana@correo.com', waMsg: 'Hola Ana, te escribimos de New Denim.', lines: { Nombre: 'Ana Pérez Soto', Empresa: 'Confecciones Ana', Celular: '987654321', Correo: 'ana@correo.com', Mensaje: 'Hola, busco denim stretch para una colección de jeans. Necesito unos 300 metros y quisiera conocer precios por mayor.' } },
-  muestra: { who: 'Confecciones Ana S.A.C.', cel: '987654321', correo: '', waMsg: 'Hola, gracias por solicitar tu muestra gratis.', lines: { 'Tipo de cliente': 'Empresa', 'Razon social': 'Confecciones Ana S.A.C.', RUC: '20100070970', Celular: '987654321', Correo: '-', Entrega: 'Envio', Distrito: 'Ate', Direccion: 'Av. Lima 123', Telas: 'Denim, Drill' } },
+  muestra: { who: 'Confecciones Ana S.A.C.', cel: '987654321', correo: '', waMsg: 'Hola, gracias por solicitar tu muestra gratis.', lines: { 'Tipo de cliente': 'Empresa', 'Razon social': 'Confecciones Ana S.A.C.', RUC: '20100070970', Celular: '987654321', Correo: '-', Tela: 'Denim', 'Tipo de tela': 'Stretch', 'Linea de producto': 'Moda mujer', 'Tipo de negocio': 'Marca propia', 'Compra mensual': '5 a 20 rollos', Entrega: 'Envio', Distrito: 'Ate', Direccion: 'Av. Lima 123' } },
   reclamo: { who: 'Luis Gómez', cel: '987654321', correo: 'luis@correo.com', waMsg: 'Hola Luis, sobre tu hoja de reclamación.', lines: { 'N° de hoja': '20261118-154249', Fecha: '18/11/2026 15:42', Tipo: 'Reclamo', Documento: 'DNI 12345678', Nombre: 'Luis Gómez', Celular: '987654321', Correo: 'luis@correo.com', Domicilio: 'Av. Lima 123', 'Bien contratado': 'Producto', 'Monto reclamado': '150.50', Descripcion: 'Drill crudo', Detalle: 'La tela llegó con manchas en el borde del rollo.', 'Pedido del consumidor': 'Cambio del producto.' } },
 };
 SAMPLES.copia = { ...SAMPLES.reclamo, who: 'Luis' };
@@ -110,15 +115,18 @@ const hits = new Map();   // antispam: 6 envios por minuto por IP
 setInterval(() => hits.clear(), 60000).unref();
 app.post('/api/:form', express.urlencoded({ extended: false, limit: '30kb' }), async (req, res) => {
   const fn = forms[req.params.form];
-  const fail = (m) => res.status(400).type('html').send(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><body style="font-family:sans-serif;padding:40px;text-align:center"><h1>Revisa tus datos</h1><p>${String(m).replace(/</g, '&lt;')}</p><p><a href="javascript:history.back()">Volver al formulario</a></p>`);
+  const json = String(req.headers.accept || '').includes('application/json');
+  const fail0 = (m) => res.status(400).type('html').send(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><body style="font-family:sans-serif;padding:40px;text-align:center"><h1>Revisa tus datos</h1><p>${String(m).replace(/</g, '&lt;')}</p><p><a href="javascript:history.back()">Volver al formulario</a></p>`);
+  const fail = (m) => json ? res.status(400).json({ ok: false, error: String(m) }) : fail0(m);
   if (!fn) return res.status(404).end();
   const b = req.body || {};
-  if (b.web) return res.redirect(303, '/gracias/');                                                     // honeypot
-  if ((hits.set(req.ip, (hits.get(req.ip) || 0) + 1), hits.get(req.ip)) > 6) return res.status(429).send('Demasiados envíos. Espera un minuto.');
+  if (b.web) return json ? res.json({ ok: true, next: '/gracias/' }) : res.redirect(303, '/gracias/');                                                     // honeypot
+  if ((hits.set(req.ip, (hits.get(req.ip) || 0) + 1), hits.get(req.ip)) > 6) return json ? res.status(429).json({ ok: false, error: 'Demasiados envíos. Espera un minuto.' }) : res.status(429).send('Demasiados envíos. Espera un minuto.');
   if (Date.now() / 1000 - (+b.t || 0) < 3) return fail('Envío demasiado rápido. Inténtalo de nuevo.');   // anti bot
   let r; try { r = fn(b); } catch (e) { if (e instanceof Bad) return fail(e.message); throw e; }
   const ok = await send(r);
-  res.redirect(303, r.next + (ok ? '' : (r.next.includes('?') ? '&' : '?') + 'm=0'));
+  const next = r.next + (ok ? '' : (r.next.includes('?') ? '&' : '?') + 'm=0');
+  json ? res.json({ ok: true, next, sent: ok }) : res.redirect(303, next);
 });
 
 if (process.env.NODE_ENV !== 'production') app.get('/__preview/:k', (req, res) => {

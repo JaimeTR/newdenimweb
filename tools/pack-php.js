@@ -29,5 +29,4 @@ return [
 ];
 `);
 const zip = (name, extra = '') => { const out = path.join(root, '..', name); fs.rmSync(out, { force: true }); execSync(`tar -a -cf ../../${name} ${extra} .`, { cwd: dist, stdio: 'inherit' }); console.log(name, (fs.statSync(out).size / 1048576).toFixed(1) + ' MB'); };
-zip('Web-New-Denim-hosting.zip');
-zip('Web-New-Denim-hosting-sin-catalogos.zip', '--exclude=./assets/catalogos');
+zip('Web-New-Denim.zip');   // un solo zip con todo (incluye los catalogos PDF)

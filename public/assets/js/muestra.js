@@ -32,6 +32,17 @@
   }
   f.querySelectorAll('[name=tipo],[name=entrega]').forEach((r) => r.addEventListener('change', apply));
   apply();
+
+  // "Tipo de tela" depende de la tela elegida (Denim: 4 opciones; Drill: 3)
+  const tt = f.elements.tipo_tela;
+  function fillTipoTela() {
+    const t = f.querySelector('[name=tela]:checked');
+    tt.innerHTML = ''; tt.add(new Option(t ? 'Selecciona…' : 'Elige primero la tela', ''));
+    if (t) tt.dataset[t.value.toLowerCase()].split('|').forEach((v) => tt.add(new Option(v, v)));
+    tt.disabled = !t;
+  }
+  f.querySelectorAll('[name=tela]').forEach((r) => r.addEventListener('change', () => { fillTipoTela(); f.querySelectorAll('.err').forEach((n) => n.remove()); }));
+  fillTipoTela();
   f.querySelectorAll('[data-fmt]').forEach((el) => el.addEventListener('input', () => ndFmt(el)));
 
   function errorsOf(i) {
@@ -39,13 +50,18 @@
     const g = (n) => f.elements[n].value.trim().replace(/\s+/g, ' ');
     const chk = (n, ok, msg) => { if (!ok(g(n))) bad.push([f.elements[n].closest('.in'), msg]); };
     if (i === 0) {
-      if (!f.querySelector('[name="telas[]"]:checked')) bad.push([f.querySelector('.chips2'), 'Elige al menos un tipo de tela.']);
-      if (val('entrega') === 'envio') { chk('direccion', (v) => RE.direc.test(v), 'Escribe una dirección válida.'); if (g('distrito')) chk('distrito', (v) => RE.lugar.test(v), 'Distrito no válido.'); }
+      if (!f.querySelector('[name=tela]:checked')) bad.push([f.querySelector('.chips2'), 'Elige un tipo de tela.']);
+      else chk('tipo_tela', (v) => v, 'Elige el tipo de tela.');
+      chk('linea', (v) => v, 'Elige la línea de producto.');
+      if (val('entrega') === 'envio') { chk('distrito', (v) => RE.lugar.test(v), 'Escribe el distrito.'); chk('direccion', (v) => RE.direc.test(v), 'Escribe una dirección válida.'); }
     } else {
-      if (emp) { chk('razon', (v) => RE.razon.test(v), 'Escribe la razón social (mínimo 3 caracteres).'); chk('ruc', rucOk, 'RUC no válido (11 dígitos).'); }
-      else { chk('nombre', (v) => RE.nombre.test(v), 'Escribe tu nombre completo (solo letras).'); if (g('dni')) chk('dni', (v) => /^\d{8}$/.test(v), 'El DNI tiene 8 dígitos.'); }
+      if (emp) chk('razon', (v) => RE.razon.test(v), 'Escribe la razón social (mínimo 3 caracteres).');
+      else chk('nombre', (v) => RE.nombre.test(v), 'Escribe tu nombre completo (solo letras).');
+      chk('ruc', rucOk, 'RUC no válido (11 dígitos, ej. 20100070970).');
       chk('celular', (v) => /^9\d{8}$/.test(v), 'Debe tener 9 dígitos y empezar con 9.');
       if (g('correo')) chk('correo', (v) => v.length <= 100 && RE.email.test(v), 'Ingresa un correo válido.');
+      chk('negocio', (v) => v, 'Elige el tipo de negocio.');
+      chk('compra', (v) => v, 'Elige la compra mensual.');
     }
     return bad;
   }
@@ -70,13 +86,13 @@
     for (let i = 0; i < steps.length; i++) { const bad = errorsOf(i); if (bad.length) { e.preventDefault(); go(i); showErrors(bad); return; } }
     // Guarda el resumen para la pagina de gracias (boton de WhatsApp con el mensaje ya escrito)
     const emp = val('tipo') === 'empresa', env = val('entrega') === 'envio', g = (n) => f.elements[n].value.trim().replace(/\s+/g, ' ');
-    const telas = [...f.querySelectorAll('[name="telas[]"]:checked')].map((c) => c.value).join(', ');
+    const tela = f.querySelector('[name=tela]:checked').value;
     const who = emp ? g('razon') : g('nombre');
-    const msg = ['Hola New Denim, solicité una muestra gratis desde la web.', '', `${emp ? 'Empresa: ' : 'Nombre: '}${who}`, emp ? `RUC: ${g('ruc')}` : '', `Celular: ${g('celular')}`, `Telas: ${telas}`,
-      env ? `Entrega: envío a ${g('direccion')}${g('distrito') ? ', ' + g('distrito') : ''}` : 'Entrega: recojo en tienda'].filter(Boolean).join('\n');
-    try { sessionStorage.setItem('nd_muestra', JSON.stringify({ who: (emp ? who : who.split(' ')[0]), msg })); } catch (_) {}
-    f.querySelectorAll('.btn').forEach((b) => { b.disabled = true; });
-    fin.classList.add('loading');
-    window.addEventListener('pageshow', () => f.querySelectorAll('.btn').forEach((x) => { x.disabled = false; x.classList.remove('loading'); }));
+    const msg = ['Hola New Denim, solicité una muestra gratis desde la web.', '', `${emp ? 'Empresa: ' : 'Nombre: '}${who}`, `RUC: ${g('ruc')}`, `Celular: ${g('celular')}`,
+      `Tela: ${tela} ${g('tipo_tela').toLowerCase()}`, `Línea: ${g('linea')}`, `Negocio: ${g('negocio')}`, `Compra mensual: ${g('compra')}`,
+      env ? `Entrega: envío a ${g('direccion')}, ${g('distrito')}` : 'Entrega: recojo en tienda'].join('\n');
+    // Primero se envia el correo; si sale bien se abre WhatsApp con este mensaje y se muestra la pagina de gracias
+    e.preventDefault();
+    ndSend(f, `https://wa.me/${f.dataset.wa}?text=${encodeURIComponent(msg)}`, { who: emp ? who : who.split(' ')[0], msg });
   });
 })();

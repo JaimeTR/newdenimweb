@@ -6,6 +6,7 @@
  */
 declare(strict_types=1);
 date_default_timezone_set('America/Lima');
+ini_set('display_errors', '0');   // nunca mostrar errores PHP al visitante
 $cfg = require __DIR__ . '/config.php';
 require __DIR__ . '/lib/email.php';
 require __DIR__ . '/vendor/phpmailer/Exception.php';
@@ -16,7 +17,11 @@ use PHPMailer\PHPMailer\PHPMailer;
 // ---------- utilidades ----------
 final class Bad extends Exception {}
 function need(bool $ok, string $msg): void { if (!$ok) throw new Bad($msg); }
-function clean($v, int $max = 200): string { return mb_substr(trim(preg_replace('/\s+/u', ' ', strip_tags((string)$v))), 0, $max); }
+function clean($v, int $max = 200): string {
+    $s = is_array($v) ? '' : (string)$v;
+    if (!mb_check_encoding($s, 'UTF-8')) $s = mb_convert_encoding($s, 'UTF-8', 'ISO-8859-1');   // texto mal codificado: no romper
+    return mb_substr(trim((string)preg_replace('/\s+/u', ' ', strip_tags($s))), 0, $max);
+}
 function digits($v): string { return preg_replace('/\D/', '', (string)$v); }
 function cel($v): string { $d = digits($v); return (strlen($d) > 9 && strpos($d, '51') === 0) ? substr($d, 2) : $d; }
 function email_ok(string $v): bool { return strlen($v) <= 100 && filter_var($v, FILTER_VALIDATE_EMAIL) && preg_match('/@[^@\s]+\.[^@\s]{2,}$/', $v); }
@@ -32,8 +37,10 @@ const RE_RAZON  = "/^(?=.*\\p{L})[\\p{L}\\p{N} .,&'\\-\\/()]{3,100}$/u";
 const RE_LUGAR  = "/^\\p{L}[\\p{L} '.\\-]{1,59}$/u";
 const RE_DIREC  = "/^(?=.*\\p{L})[\\p{L}\\p{N} .,#°ºª'\\-\\/()]{5,120}$/u";
 
+function wants_json(): bool { return strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false; }
 function fail(string $m, int $code = 400): void {
     http_response_code($code);
+    if (wants_json()) { header('Content-Type: application/json; charset=utf-8'); echo json_encode(['ok' => false, 'error' => $m], JSON_UNESCAPED_UNICODE); exit; }
     echo '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><body style="font-family:sans-serif;padding:40px;text-align:center"><h1>Revisa tus datos</h1><p>' . htmlspecialchars($m) . '</p><p><a href="javascript:history.back()">Volver al formulario</a></p>';
     exit;
 }
@@ -51,20 +58,23 @@ function f_contacto(array $b): array {
 }
 function f_muestra(array $b): array {
     $emp = ($b['tipo'] ?? '') === 'empresa'; $env = ($b['entrega'] ?? '') === 'envio';
-    $telas = array_values(array_filter(array_map(fn($t) => clean($t, 20), (array)($b['telas'] ?? [])), fn($t) => in_array($t, ['Denim', 'Drill'], true)));
-    $o = ['nombre' => clean($b['nombre'] ?? '', 80), 'dni' => digits($b['dni'] ?? ''), 'razon' => clean($b['razon'] ?? '', 100), 'ruc' => digits($b['ruc'] ?? ''), 'celular' => cel($b['celular'] ?? ''), 'correo' => clean($b['correo'] ?? '', 100), 'distrito' => clean($b['distrito'] ?? '', 60), 'direccion' => clean($b['direccion'] ?? '', 120)];
-    need((bool)$telas, 'Elige al menos un tipo de tela.');
-    if ($emp) { need((bool)preg_match(RE_RAZON, $o['razon']), 'Escribe la razón social.'); need(ruc_ok($o['ruc']), 'RUC no válido.'); }
-    else { need((bool)preg_match(RE_NOMBRE, $o['nombre']), 'Escribe tu nombre completo.'); need($o['dni'] === '' || (bool)preg_match('/^\d{8}$/', $o['dni']), 'El DNI tiene 8 dígitos.'); }
+    $tela = clean($b['tela'] ?? '', 20); $tipoTela = clean($b['tipo_tela'] ?? '', 20); $linea = clean($b['linea'] ?? '', 30); $negocio = clean($b['negocio'] ?? '', 50); $compra = clean($b['compra'] ?? '', 30);
+    $o = ['nombre' => clean($b['nombre'] ?? '', 80), 'razon' => clean($b['razon'] ?? '', 100), 'ruc' => digits($b['ruc'] ?? ''), 'celular' => cel($b['celular'] ?? ''), 'correo' => clean($b['correo'] ?? '', 100), 'distrito' => clean($b['distrito'] ?? '', 60), 'direccion' => clean($b['direccion'] ?? '', 120)];
+    need(in_array($tela, ['Denim', 'Drill'], true), 'Elige un tipo de tela.');
+    need(in_array($tipoTela, $tela === 'Denim' ? ['Rígido', 'Confort', 'Stretch', 'Super stretch'] : ['Rígido', 'Confort', 'Stretch'], true), 'Elige el tipo de tela.');
+    need(in_array($linea, ['Moda hombre', 'Moda mujer', 'Niños y junior', 'Denim camisero', 'Denim de trabajo'], true), 'Elige la línea de producto.');
+    if ($emp) need((bool)preg_match(RE_RAZON, $o['razon']), 'Escribe la razón social.'); else need((bool)preg_match(RE_NOMBRE, $o['nombre']), 'Escribe tu nombre completo.');
+    need(ruc_ok($o['ruc']), 'RUC no válido.');
+    need(in_array($negocio, ['Marca propia', 'Maquilador / confección a tercero'], true), 'Elige el tipo de negocio.');
+    need(in_array($compra, ['5 a 20 rollos', '20 a 50 rollos', '50 rollos a más'], true), 'Elige la compra mensual.');
     need((bool)preg_match('/^9\d{8}$/', $o['celular']), 'El celular debe tener 9 dígitos y empezar con 9.');
     need($o['correo'] === '' || email_ok($o['correo']), 'Ingresa un correo válido.');
-    if ($env) { need((bool)preg_match(RE_DIREC, $o['direccion']), 'Escribe una dirección válida.'); need($o['distrito'] === '' || (bool)preg_match(RE_LUGAR, $o['distrito']), 'Distrito no válido.'); }
+    if ($env) { need((bool)preg_match(RE_DIREC, $o['direccion']), 'Escribe una dirección válida.'); need((bool)preg_match(RE_LUGAR, $o['distrito']), 'Escribe el distrito.'); }
     $who = $emp ? $o['razon'] : $o['nombre'];
     $lines = ['Tipo de cliente' => $emp ? 'Empresa' : 'Persona natural'];
-    $lines += $emp ? ['Razon social' => $o['razon'], 'RUC' => $o['ruc']] : ['Nombre' => $o['nombre'], 'DNI' => $o['dni'] ?: '-'];
-    $lines += ['Celular' => $o['celular'], 'Correo' => $o['correo'] ?: '-', 'Entrega' => $env ? 'Envio' : 'Recojo en tienda'];
-    if ($env) $lines += ['Distrito' => $o['distrito'] ?: '-', 'Direccion' => $o['direccion']];
-    $lines['Telas'] = implode(', ', $telas);
+    $lines += $emp ? ['Razon social' => $o['razon']] : ['Nombre' => $o['nombre']];
+    $lines += ['RUC' => $o['ruc'], 'Celular' => $o['celular'], 'Correo' => $o['correo'] ?: '-', 'Tela' => $tela, 'Tipo de tela' => $tipoTela, 'Linea de producto' => $linea, 'Tipo de negocio' => $negocio, 'Compra mensual' => $compra, 'Entrega' => $env ? 'Envio' : 'Recojo en tienda'];
+    if ($env) $lines += ['Distrito' => $o['distrito'], 'Direccion' => $o['direccion']];
     return ['kind' => 'muestra', 'who' => $who, 'cel' => $o['celular'], 'correo' => $o['correo'],
         'waMsg' => 'Hola ' . ($emp ? $who : explode(' ', $o['nombre'])[0]) . ', gracias por solicitar tu muestra gratis en New Denim. Te escribimos para coordinar ' . ($env ? 'el envío' : 'el recojo en tienda') . '.',
         'subject' => 'Solicitud de muestra gratis - ' . $who, 'replyTo' => $o['correo'], 'next' => '/muestra-gratis/gracias/?e=' . ($env ? 'envio' : 'recojo'), 'lines' => $lines];
@@ -119,7 +129,7 @@ function send_all(array $cfg, array $r): bool {
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: /contacto/'); exit; }
 $f = $_GET['f'] ?? '';
 if (!in_array($f, ['contacto', 'muestra', 'reclamo'], true)) { http_response_code(404); exit; }
-if (!empty($_POST['web'])) { header('Location: /gracias/', true, 303); exit; }                                     // honeypot
+if (!empty($_POST['web'])) { if (wants_json()) { header('Content-Type: application/json'); echo '{"ok":true,"next":"/gracias/"}'; exit; } header('Location: /gracias/', true, 303); exit; }                                     // honeypot
 if (time() - (int)($_POST['t'] ?? 0) < 3) fail('Envío demasiado rápido. Inténtalo de nuevo.');                      // anti bot
 
 @mkdir(__DIR__ . '/data/rate', 0755, true);                                                                          // 6 envios por minuto por IP
@@ -133,4 +143,6 @@ catch (Bad $e) { fail($e->getMessage()); }
 
 $ok = send_all($cfg, $r);
 @file_put_contents(__DIR__ . '/data/envios.log', date('c') . ' ' . ($ok ? 'OK' : 'MAIL-FAIL') . ' ' . $r['subject'] . ' ' . json_encode($r['lines'], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
-header('Location: ' . $r['next'] . ($ok ? '' : ((strpos($r['next'], '?') !== false ? '&' : '?') . 'm=0')), true, 303);
+$next = $r['next'] . ($ok ? '' : ((strpos($r['next'], '?') !== false ? '&' : '?') . 'm=0'));
+if (wants_json()) { header('Content-Type: application/json; charset=utf-8'); echo json_encode(['ok' => true, 'next' => $next, 'sent' => $ok]); exit; }
+header('Location: ' . $next, true, 303);

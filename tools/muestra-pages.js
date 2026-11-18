@@ -1,7 +1,12 @@
 // Paginas /muestra-gratis/ y /muestra-gratis/gracias/ (se incluyen desde build.js)
 module.exports = ({ S, ico, waI, wa, add, V }) => {
   const CSS = `\n<link rel="stylesheet" href="/assets/css/muestra.css?v=${V('css/muestra.css')}">`;
-  const chip = (n, d) => `<label class="chip"><input type="checkbox" name="telas[]" value="${n}"><span>${ico('layers')}<i><b>${n}</b><small>${d}</small></i><em class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></em></span></label>`;
+  const chip = (n, d) => `<label class="chip"><input type="radio" name="tela" value="${n}"><span>${ico('layers')}<i><b>${n}</b><small>${d}</small></i><em class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></em></span></label>`;
+  const sel = (label, name, ic, opts, extra = '') => `<label class="f">${label}<span class="in">${ico(ic)}<select name="${name}" ${extra}><option value="">Selecciona…</option>${opts.map((v) => `<option>${v}</option>`).join('')}</select></span></label>`;
+  const TELA = { Denim: ['Rígido', 'Confort', 'Stretch', 'Super stretch'], Drill: ['Rígido', 'Confort', 'Stretch'] };
+  const LINEAS = ['Moda hombre', 'Moda mujer', 'Niños y junior', 'Denim camisero', 'Denim de trabajo'];
+  const NEGOCIO = ['Marca propia', 'Maquilador / confección a tercero'];
+  const COMPRA = ['5 a 20 rollos', '20 a 50 rollos', '50 rollos a más'];
   const inp = (label, name, ic, o = {}) => `<label class="f ${o.cls || ''}"${o.hid ? ' hidden' : ''}>${label}<span class="in">${ico(ic)}<input name="${name}" ${o.attr || ''}${o.hid ? ' disabled' : ''}></span></label>`;
   add({
     file: 'muestra-gratis', nav: '/muestra-gratis/', schema: CSS, script: `<script src="/assets/js/muestra.js?v=${V('js/muestra.js')}" defer></script>`,
@@ -12,29 +17,30 @@ module.exports = ({ S, ico, waI, wa, add, V }) => {
     <p class="lead">Solicita muestras de nuestras telas denim y drill. Ideal para diseñadores, marcas y confeccionistas. La muestra gratis es de hasta <b>1.5 metros</b>; una cantidad mayor tiene costo.</p>
     <div class="btns"><a class="btn dark" href="#solicitar">${ico('send')} Solicitar muestra gratis</a><a class="btn ghost" href="/linea-de-productos/">Ver productos ${ico('arrow')}</a></div>
     <ul class="badges"><li>${ico('gift')} Muestra gratis hasta 1.5 m</li><li>${ico('pin')} Recojo en tienda</li><li>${ico('clock')} Respuesta rápida</li></ul></div>
-  <div class="hero-card reveal in"><div class="swatch s-denim"><span>${ico('layers')} Denim</span><small>Rígido, confort, stretch y high stretch</small></div><div class="swatch s-drill"><span>${ico('layers')} Drill</span><small>Crudos: drill rígido, confort y stretch</small></div></div>
+  <div class="hero-card reveal in"><div class="swatch s-denim"><span>${ico('layers')} Denim</span><small>Rígido, confort, stretch y super stretch</small></div><div class="swatch s-drill"><span>${ico('layers')} Drill</span><small>Crudos: drill rígido, confort y stretch</small></div></div>
 </div></section>`,
     body: `
 <section class="section" id="solicitar-sec"><div class="wrap narrow"><div class="sec-head reveal"><h2 class="sec-title">Solicita tu <em>muestra</em></h2><p class="sec-sub">Dos pasos rápidos. Muestra gratis de hasta 1.5 metros.</p></div>
-<form class="card mform" method="post" action="/api/muestra" id="solicitar" novalidate>
+<form class="card mform" method="post" action="/api/muestra" id="solicitar" data-ajax data-wa="${S.wa}" novalidate>
   <input type="hidden" name="t" value=""><input type="text" name="web" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
   <div class="prog" id="prog" hidden><div class="prog-track"><i id="progBar"></i></div><p id="progTxt">Paso 1 de 2</p></div>
   <div class="steps-box">
     <fieldset class="step"><legend><span class="num">1</span> Tu pedido</legend>
-      <span class="lab">¿Qué tela quieres probar?</span><div class="chips2">${chip('Denim', 'Rígido y stretch')}${chip('Drill', 'Algodón y mezclas')}</div>
+      <span class="lab">¿Qué tela quieres probar? <small>(elige una)</small></span><div class="chips2">${chip('Denim', 'Rígido, confort, stretch y super stretch')}${chip('Drill', 'Crudos: rígido, confort y stretch')}</div>
+      <div class="grid gap">${sel('Tipo de tela *', 'tipo_tela', 'ruler', [], `data-denim="${TELA.Denim.join('|')}" data-drill="${TELA.Drill.join('|')}" disabled`)}${sel('Línea de producto *', 'linea', 'users', LINEAS)}</div>
       <span class="lab gap">¿Cómo quieres recibirlas?</span>
       <div class="seg" role="radiogroup" id="seg2" data-on="0" aria-label="Forma de entrega"><i class="seg-bar"></i>
         <label><input type="radio" name="entrega" value="recojo" checked><span>${ico('pin')} Recojo en tienda</span></label><label><input type="radio" name="entrega" value="envio"><span>${ico('truck')} Envío</span></label></div>
       <p class="store-note ent ent-recojo">${ico('pin')} <span>Recoge en <b>${S.addrShort}</b>. Te avisamos cuando estén listas.</span></p>
-      <div class="grid ent ent-envio" hidden>${inp('Distrito / ciudad', 'distrito', 'pin', { hid: 1, attr: 'maxlength="60" data-fmt="name"' })}${inp('Dirección de envío *', 'direccion', 'truck', { hid: 1, attr: 'maxlength="120" data-fmt="addr" autocomplete="street-address"' })}</div>
+      <div class="grid ent ent-envio" hidden>${inp('Distrito / ciudad *', 'distrito', 'pin', { hid: 1, attr: 'maxlength="60" data-fmt="name"' })}${inp('Dirección de envío *', 'direccion', 'truck', { hid: 1, attr: 'maxlength="120" data-fmt="addr" autocomplete="street-address"' })}</div>
     </fieldset>
     <fieldset class="step" hidden><legend><span class="num">2</span> Tus datos</legend>
       <div class="seg" role="radiogroup" id="seg" data-on="0" aria-label="Tipo de cliente"><i class="seg-bar"></i>
         <label><input type="radio" name="tipo" value="natural" checked><span>${ico('user')} Persona natural</span></label><label><input type="radio" name="tipo" value="empresa"><span>${ico('build')} Empresa</span></label></div>
       <div class="grid gap" id="grid">
-        ${inp('Razón social *', 'razon', 'build', { cls: 'only-emp', hid: 1, attr: 'maxlength="100" data-fmt="biz" autocomplete="organization"' })}${inp('RUC *', 'ruc', 'id', { cls: 'only-emp', hid: 1, attr: 'inputmode="numeric" maxlength="11" data-fmt="num" placeholder="11 dígitos"' })}
-        ${inp('Nombre completo *', 'nombre', 'user', { cls: 'only-nat', attr: 'maxlength="80" data-fmt="name" autocomplete="name"' })}${inp('DNI <small>(opcional)</small>', 'dni', 'id', { cls: 'only-nat', attr: 'inputmode="numeric" maxlength="8" data-fmt="num" placeholder="8 dígitos"' })}
+        ${inp('Razón social *', 'razon', 'build', { cls: 'only-emp', hid: 1, attr: 'maxlength="100" data-fmt="biz" autocomplete="organization"' })}${inp('Nombre completo *', 'nombre', 'user', { cls: 'only-nat', attr: 'maxlength="80" data-fmt="name" autocomplete="name"' })}${inp('RUC *', 'ruc', 'id', { attr: 'inputmode="numeric" maxlength="11" data-fmt="num" placeholder="11 dígitos"' })}
         ${inp('Celular / WhatsApp *', 'celular', 'phone', { attr: 'type="tel" inputmode="numeric" maxlength="18" data-fmt="cel" autocomplete="tel" placeholder="9XX XXX XXX"' })}${inp('Correo <small>(opcional)</small>', 'correo', 'mail', { attr: 'type="email" maxlength="100" data-fmt="mail" autocomplete="email"' })}
+        ${sel('Tipo de negocio / canal *', 'negocio', 'users', NEGOCIO)}${sel('Compra mensual *', 'compra', 'scale', COMPRA)}
         <p class="wa-note full">${waI} Toda la coordinación se realizará por WhatsApp.</p></div>
     </fieldset>
   </div>
@@ -52,7 +58,7 @@ module.exports = ({ S, ico, waI, wa, add, V }) => {
   <p id="gm" class="alert" style="max-width:520px;margin:0 auto 20px" hidden>No pudimos enviar el aviso por correo, pero guardamos tu solicitud. Envíala también por WhatsApp para atenderte de inmediato.</p>
   <a class="btn wa" id="gwa" href="${wa('Hola New Denim, quiero una muestra gratis.')}" target="_blank" rel="noopener">${waI} Enviar mi solicitud por WhatsApp</a>
   <p style="font-size:.82rem;color:var(--soft);margin:16px 0 0">Se abrirá WhatsApp con tu solicitud ya escrita. Solo presiona enviar y te atendemos más rápido.</p><p style="margin-top:18px"><a href="/" style="color:var(--soft);font-size:.88rem">Volver al inicio</a></p></div></div></section>
-<script>(function(){var q=new URLSearchParams(location.search),$=function(i){return document.getElementById(i)},d={};try{d=JSON.parse(sessionStorage.getItem('nd_muestra')||'{}')}catch(e){}
+<script>(function(){var q=new URLSearchParams(location.search),$=function(i){return document.getElementById(i)},d={};try{d=JSON.parse(sessionStorage.getItem('nd_form')||'{}')}catch(e){}
 if(d.who)$('gn').textContent=', '+d.who;if(d.msg)$('gwa').href='https://wa.me/${S.wa}?text='+encodeURIComponent(d.msg);
 if(q.get('e')==='envio')$('gstep').innerHTML='<b>Coordinamos el envío</b> contigo: te confirmaremos la forma y los detalles de entrega.';if(q.get('m')==='0')$('gm').hidden=false})()</script>`,
   });

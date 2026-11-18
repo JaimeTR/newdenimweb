@@ -26,6 +26,26 @@ window.ndFmt = (el) => {
   else if (rule) { let v = el.value.replace(rule, '').replace(/^\s+/, ''); if (k === 'money') v = v.replace(/(\..*)\./g, '$1').replace(/^(\d*\.\d{0,2}).*/, '$1'); el.value = v.slice(0, m); }
 };
 const celNorm = (v) => { let d = v.replace(/\D/g, ''); if (d.length > 9 && d.startsWith('51')) d = d.slice(2); return d.replace(/^[^9]+/, '').slice(0, 9); };   // solo empieza con 9
+// Envia un formulario por fetch: primero el correo; si sale bien abre WhatsApp (pestana abierta con el clic para que no la bloqueen) y va a la pagina de gracias
+window.ndSend = async (f, waUrl, store) => {
+  const btns = [...f.querySelectorAll('button[type=submit]')];
+  const win = waUrl ? window.open('', '_blank') : null;
+  f.querySelectorAll('.send-err').forEach((n) => n.remove());
+  btns.forEach((b) => { b.disabled = true; b.classList.add('loading'); });
+  try {
+    const r = await fetch(f.action, { method: 'POST', headers: { Accept: 'application/json' }, body: new URLSearchParams(new FormData(f)) });
+    const j = await r.json().catch(() => ({}));
+    if (!j.ok) throw new Error(j.error || 'No se pudo enviar. Inténtalo de nuevo.');
+    try { if (store) sessionStorage.setItem('nd_form', JSON.stringify(store)); } catch (_) {}
+    if (win) win.location.href = waUrl;
+    location.href = j.next;
+  } catch (e) {
+    if (win) win.close();
+    btns.forEach((b) => { b.disabled = false; b.classList.remove('loading'); });
+    const p = document.createElement('p'); p.className = 'alert send-err'; p.setAttribute('role', 'alert'); p.textContent = e.message;
+    btns[0].parentNode.insertBefore(p, btns[0]); p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+};
 document.querySelectorAll('form[data-form]').forEach((f) => {
   const t = f.querySelector('[name=t]'); if (t) t.value = Math.floor(Date.now() / 1000);
   f.querySelectorAll('[data-fmt]').forEach((el) => el.addEventListener('input', () => ndFmt(el)));
@@ -51,6 +71,17 @@ document.querySelectorAll('form[data-form]').forEach((f) => {
       if (!ok(v)) { const box = el.closest('.f,.chk'); box.classList.add('bad'); box.insertAdjacentHTML('beforeend', `<span class="err">${msg}</span>`); first = first || el; }
     });
     if (first) { e.preventDefault(); first.scrollIntoView({ behavior: 'smooth', block: 'center' }); first.focus({ preventScroll: true }); return; }
+    if (f.hasAttribute('data-ajax')) {   // envia el correo sin salir de la pagina y, si corresponde, abre WhatsApp con el mensaje
+      e.preventDefault();
+      const g = (n) => (f.elements[n]?.value || '').trim().replace(/\s+/g, ' ');
+      let waUrl = null; const store = { who: g('nombre').split(' ')[0] };
+      if (f.dataset.wa) {
+        const msg = [`Hola New Denim, soy ${g('nombre')}${g('empresa') ? ' de ' + g('empresa') : ''}. Les escribí desde la web:`, '', `"${g('mensaje').slice(0, 400)}"`, '', `Mi celular: ${g('celular')}`].join('\n');
+        waUrl = `https://wa.me/${f.dataset.wa}?text=${encodeURIComponent(msg)}`; store.msg = msg;
+      }
+      ndSend(f, waUrl, store);
+      return;
+    }
     f.querySelectorAll('button[type=submit]').forEach((b) => { b.disabled = true; });
   });
 });

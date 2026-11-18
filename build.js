@@ -318,7 +318,7 @@ add({
     <iframe class="map" title="Ubicación de New Denim en Google Maps" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=${encodeURIComponent(S.mapQ)}&t=m&z=16&output=embed"></iframe>
   </div>
   <div class="card reveal" style="transition-delay:100ms"><h2>Formulario de contacto</h2><p>Envíanos tu mensaje y te responderemos pronto.</p>
-    <form method="post" action="/api/contacto" data-form novalidate>${hid('contacto')}<div class="grid">
+    <form method="post" action="/api/contacto" data-form data-ajax data-wa="${S.wa}" novalidate>${hid('contacto')}<div class="grid">
       ${field('Nombre y apellidos *', 'nombre', { max: 80, auto: 'name', v: 'nombre' })}${field('Empresa <small>(opcional)</small>', 'empresa', { max: 100, auto: 'organization', v: 'empresa' })}
       ${field('Correo electrónico *', 'correo', { type: 'email', max: 100, auto: 'email', v: 'correo' })}${field('Celular / WhatsApp *', 'celular', { type: 'tel', fmt: 'cel', max: 18, ph: '9XX XXX XXX', auto: 'tel', v: 'celular' })}
       ${field('¿Cómo podemos ayudarle? *', 'mensaje', { tag: 'textarea', full: true, v: 'texto', ph: 'Cuéntanos qué tela buscas, cantidad aproximada y para qué prenda.' })}</div>
@@ -337,7 +337,7 @@ add({
   hero: pageHero('Libro de reclamaciones', 'Libro de <em>reclamaciones</em>', 'Conforme al Código de Protección y Defensa del Consumidor, ponemos a tu disposición nuestro libro de reclamaciones virtual.'),
   body: `<section class="section"><div class="wrap narrow"><div class="card reveal in">
   <div class="notice"><b>New Denim SAC</b> · ${S.addr}. Recibirás una copia de la hoja en tu correo (si lo indicas) y te responderemos dentro del plazo legal.</div>
-  <form method="post" action="/api/reclamo" data-form novalidate>${hid('reclamo')}
+  <form method="post" action="/api/reclamo" data-form data-ajax novalidate>${hid('reclamo')}
   <fieldset><legend><span>1</span> Identificación del consumidor</legend><div class="grid">
     ${field('Nombre completo *', 'nombre', { max: 80, auto: 'name', v: 'nombre' })}
     ${field('Tipo de documento', 'tipo_doc', { tag: 'select', opts: [['DNI', 'DNI'], ['CE', 'Carné de extranjería'], ['RUC', 'RUC'], ['Pasaporte', 'Pasaporte']] })}
@@ -378,13 +378,23 @@ legal('accesibilidad', 'Accesibilidad | New Denim', 'Compromiso de accesibilidad
 // ---------- GRACIAS y 404 ----------
 add({
   file: 'gracias', title: 'Gracias | New Denim', desc: 'Recibimos tu mensaje.', noindex: true, nav: '/contacto/',
-  body: `<section class="section"><div class="wrap narrow"><div class="card center-card reveal in" style="text-align:center;padding:56px 28px">
+  schema: `\n<link rel="stylesheet" href="/assets/css/muestra.css?v=${V('css/muestra.css')}">`,
+  body: `<section class="section"><div class="wrap narrow"><div class="card reveal in" style="text-align:center;padding:52px 28px">
   <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-  <h1 style="font-size:clamp(1.8rem,5vw,2.5rem);margin-bottom:10px"><span id="gt">¡Gracias por escribirnos!</span></h1>
-  <p id="gp" style="color:var(--soft);margin:0 0 8px">Recibimos tu mensaje y te responderemos pronto por WhatsApp, teléfono o correo.</p>
-  <p id="gn" style="font-weight:700;margin:0 0 8px" hidden></p><p id="gm" class="alert" style="max-width:480px;margin:14px auto" hidden>No pudimos enviar el aviso por correo automático. Escríbenos también por WhatsApp para atenderte de inmediato.</p>
-  <div class="btns" style="justify-content:center;margin-top:24px"><a class="btn wa" href="${wa('Hola New Denim, acabo de enviar un mensaje desde la web.')}" target="_blank" rel="noopener">${waI} Escribir por WhatsApp</a><a class="btn ghost" href="/">Volver al inicio</a></div></div></div></section>
-<script>(function(){var q=new URLSearchParams(location.search),$=function(i){return document.getElementById(i)};if(q.get('f')==='reclamo'){$('gt').textContent='Recibimos tu reclamación';$('gp').textContent='Te responderemos dentro del plazo legal. Si indicaste un correo, enviamos una copia de tu hoja.';var n=(q.get('n')||'').replace(/[^0-9-]/g,'');if(n){$('gn').textContent='N° de hoja: '+n;$('gn').hidden=false}}if(q.get('m')==='0')$('gm').hidden=false})()</script>`,
+  <h1 style="font-size:clamp(1.8rem,5vw,2.4rem);margin-bottom:8px"><span id="gt">¡Gracias por escribirnos!</span></h1>
+  <p id="gp" style="color:var(--soft);margin:0 0 22px">Recibimos tu mensaje correctamente.</p>
+  <p id="gn" style="display:inline-block;margin:0 0 22px;padding:8px 18px;border-radius:99px;background:#fff8e3;border:1px solid rgba(236,171,15,.6);font-weight:700" hidden></p>
+  <ol class="next" id="gl"><li><b>Revisamos tu consulta</b> y te respondemos lo antes posible.</li><li><b>Te contactamos</b> por WhatsApp, llamada o correo.</li><li>Si es urgente, escríbenos directo por WhatsApp.</li></ol>
+  <p id="gm" class="alert" style="max-width:520px;margin:0 auto 20px" hidden>No pudimos enviar el aviso por correo automático, pero guardamos tu mensaje. Escríbenos también por WhatsApp para atenderte de inmediato.</p>
+  <div class="btns" style="justify-content:center"><a class="btn wa" id="gwa" href="${wa('Hola New Denim, acabo de enviar un mensaje desde la web.')}" target="_blank" rel="noopener">${waI} <span id="gwat">Enviar también por WhatsApp</span></a><a class="btn ghost" href="/">Volver al inicio</a></div>
+  <p id="gh" style="font-size:.82rem;color:var(--soft);margin:16px 0 0">Se abre WhatsApp con tu mensaje ya escrito. Solo presiona enviar.</p></div></div></section>
+<script>(function(){var q=new URLSearchParams(location.search),$=function(i){return document.getElementById(i)},d={};try{d=JSON.parse(sessionStorage.getItem('nd_form')||'{}')}catch(e){}
+if(q.get('f')==='reclamo'){$('gt').textContent='Recibimos tu reclamación';$('gp').textContent='Tu hoja quedó registrada en nuestro libro de reclamaciones.';
+var n=(q.get('n')||'').replace(/[^0-9-]/g,'');if(n){$('gn').textContent='N° de hoja: '+n;$('gn').hidden=false}
+$('gl').innerHTML='<li><b>Registramos tu hoja</b> con el número indicado. Guárdalo como referencia.</li><li><b>Te enviamos una copia</b> a tu correo, si lo indicaste.</li><li><b>Respondemos en un máximo de 15 días hábiles.</b></li>';
+$('gwat').textContent='Escribir por WhatsApp';$('gh').hidden=true}
+else{if(d.who)$('gt').textContent='¡Gracias, '+d.who+'!';if(d.msg)$('gwa').href='https://wa.me/${S.wa}?text='+encodeURIComponent(d.msg)}
+if(q.get('m')==='0')$('gm').hidden=false})()</script>`,
 });
 add({
   file: '404', title: 'Página no encontrada | New Denim', desc: 'La página que buscas no existe.', noindex: true, outFile: '404.html',
