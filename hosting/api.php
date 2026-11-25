@@ -74,7 +74,7 @@ function f_muestra(array $b): array {
     $lines = ['Tipo de cliente' => $emp ? 'Empresa' : 'Persona natural'];
     $lines += $emp ? ['Razon social' => $o['razon'], 'RUC' => $o['ruc']] : ['Nombre' => $o['nombre'], 'DNI' => $o['dni']];
     $lines += ['Celular' => $o['celular'], 'Correo' => $o['correo'] ?: '-', 'Tela' => $tela, 'Tipo de tela' => $tipoTela, 'Linea de producto' => $linea, 'Tipo de negocio' => $negocio, 'Compra mensual' => $compra, 'Entrega' => $env ? 'Envio' : 'Recojo en tienda'];
-    if ($env) $lines += ['Distrito' => $o['distrito'], 'Direccion' => $o['direccion']];
+    if ($env) $lines += ['Distrito' => $o['distrito'], 'Direccion' => $o['direccion'], 'Costo de envio' => 'Lo paga el cliente'];
     return ['kind' => 'muestra', 'who' => $who, 'cel' => $o['celular'], 'correo' => $o['correo'],
         'waMsg' => 'Hola ' . ($emp ? $who : explode(' ', $o['nombre'])[0]) . ', gracias por solicitar tu muestra gratis en New Denim. Te escribimos para coordinar ' . ($env ? 'el envío' : 'el recojo en tienda') . '.',
         'subject' => 'Solicitud de muestra gratis - ' . $who, 'replyTo' => $o['correo'], 'next' => '/muestra-gratis/gracias/?e=' . ($env ? 'envio' : 'recojo'), 'lines' => $lines];

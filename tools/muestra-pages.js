@@ -7,7 +7,7 @@ module.exports = ({ S, ico, waI, wa, add, V }) => {
   const LINEAS = ['Moda hombre', 'Moda mujer', 'Niños y junior', 'Denim camisero', 'Denim de trabajo'];
   const NEGOCIO = ['Marca propia', 'Maquilador / confección a tercero'];
   const COMPRA = ['5 a 20 rollos', '20 a 50 rollos', '50 rollos a más'];
-  const inp = (label, name, ic, o = {}) => `<label class="f ${o.cls || ''}"${o.hid ? ' hidden' : ''}>${label}<span class="in">${ico(ic)}<input name="${name}" ${o.attr || ''}${o.hid ? ' disabled' : ''}></span></label>`;
+  const inp = (label, name, ic, o = {}) => `<label class="f ${o.cls || ''}"${o.hid && !o.show ? ' hidden' : ''}>${label}<span class="in">${ico(ic)}<input name="${name}" ${o.attr || ''}${o.hid ? ' disabled' : ''}></span></label>`;
   add({
     file: 'muestra-gratis', nav: '/muestra-gratis/', schema: CSS, script: `<script src="/assets/js/muestra.js?v=${V('js/muestra.js')}" defer></script>`,
     title: 'Muestra gratis de denim y drill | New Denim - Distribuidor Textil',
@@ -32,7 +32,8 @@ module.exports = ({ S, ico, waI, wa, add, V }) => {
       <div class="seg" role="radiogroup" id="seg2" data-on="0" aria-label="Forma de entrega"><i class="seg-bar"></i>
         <label><input type="radio" name="entrega" value="recojo" checked><span>${ico('pin')} Recojo en tienda</span></label><label><input type="radio" name="entrega" value="envio"><span>${ico('truck')} Envío</span></label></div>
       <p class="store-note ent ent-recojo">${ico('pin')} <span>Recoge en <b>${S.addrShort}</b>. Te avisamos cuando estén listas.</span></p>
-      <div class="grid ent ent-envio" hidden>${inp('Distrito / ciudad *', 'distrito', 'pin', { hid: 1, attr: 'maxlength="60" data-fmt="name"' })}${inp('Dirección de envío *', 'direccion', 'truck', { hid: 1, attr: 'maxlength="120" data-fmt="addr" autocomplete="street-address"' })}</div>
+      <p class="store-note ent ent-envio" role="status" hidden>${ico('truck')} <span><b>El costo del envío lo paga el cliente.</b> Te confirmaremos el precio por WhatsApp antes de enviar.</span></p>
+      <div class="grid ent ent-envio" hidden>${inp('Distrito / ciudad *', 'distrito', 'pin', { hid: 1, show: 1, attr: 'maxlength="60" data-fmt="name"' })}${inp('Dirección de envío *', 'direccion', 'truck', { hid: 1, show: 1, attr: 'maxlength="120" data-fmt="addr" autocomplete="street-address"' })}</div>
     </fieldset>
     <fieldset class="step" hidden><legend><span class="num">2</span> Tus datos</legend>
       <div class="seg" role="radiogroup" id="seg" data-on="0" aria-label="Tipo de cliente"><i class="seg-bar"></i>
@@ -60,6 +61,6 @@ module.exports = ({ S, ico, waI, wa, add, V }) => {
   <p style="font-size:.82rem;color:var(--soft);margin:16px 0 0">Se abrirá WhatsApp con tu solicitud ya escrita. Solo presiona enviar y te atendemos más rápido.</p><p style="margin-top:18px"><a href="/" style="color:var(--soft);font-size:.88rem">Volver al inicio</a></p></div></div></section>
 <script>(function(){var q=new URLSearchParams(location.search),$=function(i){return document.getElementById(i)},d={};try{d=JSON.parse(sessionStorage.getItem('nd_form')||'{}')}catch(e){}
 if(d.who)$('gn').textContent=', '+d.who;if(d.msg)$('gwa').href='https://wa.me/${S.wa}?text='+encodeURIComponent(d.msg);
-if(q.get('e')==='envio')$('gstep').innerHTML='<b>Coordinamos el envío</b> contigo: te confirmaremos la forma y los detalles de entrega.';if(q.get('m')==='0')$('gm').hidden=false})()</script>`,
+if(q.get('e')==='envio')$('gstep').innerHTML='<b>Coordinamos el envío</b> contigo: el costo lo paga el cliente y te confirmamos el precio antes de enviar.';if(q.get('m')==='0')$('gm').hidden=false})()</script>`,
   });
 };

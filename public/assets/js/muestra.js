@@ -89,7 +89,7 @@
     const who = emp ? g('razon') : g('nombre');
     const msg = ['Hola New Denim, solicité una muestra gratis desde la web.', '', `${emp ? 'Empresa: ' : 'Nombre: '}${who}`, emp ? `RUC: ${g('ruc')}` : `DNI: ${g('dni')}`, `Celular: ${g('celular')}`,
       `Tela: ${tela} ${g('tipo_tela').toLowerCase()}`, `Línea: ${g('linea')}`, `Negocio: ${g('negocio')}`, `Compra mensual: ${g('compra')}`,
-      env ? `Entrega: envío a ${g('direccion')}, ${g('distrito')}` : 'Entrega: recojo en tienda'].join('\n');
+      env ? `Entrega: envío a ${g('direccion')}, ${g('distrito')} (el costo del envío lo pago yo)` : 'Entrega: recojo en tienda'].join('\n');
     // Primero se envia el correo; si sale bien se abre WhatsApp con este mensaje y se muestra la pagina de gracias
     e.preventDefault();
     ndSend(f, `https://wa.me/${f.dataset.wa}?text=${encodeURIComponent(msg)}`, { who: emp ? who : who.split(' ')[0], msg });

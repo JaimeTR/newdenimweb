@@ -57,7 +57,7 @@ const forms = {
       subject: `Solicitud de muestra gratis - ${who}`, replyTo: o.correo, next: `/muestra-gratis/gracias/?e=${env ? 'envio' : 'recojo'}`,
       lines: { 'Tipo de cliente': emp ? 'Empresa' : 'Persona natural', ...(emp ? { 'Razon social': o.razon, RUC: o.ruc } : { Nombre: o.nombre, DNI: o.dni }), Celular: o.celular, Correo: o.correo || '-',
         Tela: tela, 'Tipo de tela': tipoTela, 'Linea de producto': linea, 'Tipo de negocio': negocio, 'Compra mensual': compra,
-        Entrega: env ? 'Envio' : 'Recojo en tienda', ...(env ? { Distrito: o.distrito, Direccion: o.direccion } : {}) } };
+        Entrega: env ? 'Envio' : 'Recojo en tienda', ...(env ? { Distrito: o.distrito, Direccion: o.direccion, 'Costo de envio': 'Lo paga el cliente' } : {}) } };
   },
   reclamo(b) {
     const o = { nombre: clean(b.nombre, 80), tipo_doc: ['DNI', 'CE', 'RUC', 'Pasaporte'].includes(b.tipo_doc) ? b.tipo_doc : 'DNI', doc: digits(b.doc), celular: cel(b.celular), correo: clean(b.correo, 100), domicilio: clean(b.domicilio, 120),

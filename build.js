@@ -9,7 +9,7 @@ const S = {
   addr: 'Jirón Luis Giribaldi 624 Tda 06, La Victoria, Lima, Perú', addrShort: 'Giribaldi 624 Tda 06, La Victoria, Lima',
   mapQ: 'New Denim - Distribuidor textil, Jr. Luis Giribaldi 624, La Victoria 15018, Lima, Perú',   // consulta que ubica el pin correcto en Google Maps
   tel2label: 'Asesor 2',
-  ig: 'https://www.instagram.com/newdenim_textil/', tk: 'https://www.tiktok.com/@newdenim_textil',
+  ig: 'https://www.instagram.com/newdenim_textil/', tk: 'https://www.tiktok.com/@newdenimtextil',
   fb: '', li: '',   // pegar aqui las URLs reales de Facebook/LinkedIn para que aparezcan en el sitio
 };
 const wa = (msg) => `https://wa.me/${S.wa}?text=${encodeURIComponent(msg)}`;
@@ -360,7 +360,7 @@ legal('terminos-y-condiciones', 'Términos y condiciones | New Denim', 'Término
 <h2>1. Información general</h2><p>Este sitio web pertenece a <b>New Denim SAC</b> (en adelante, "New Denim"), con domicilio en ${S.addr}. Al navegar por el sitio aceptas estos términos.</p>
 <h2>2. Productos e información</h2><p>La información, imágenes y descripciones de telas son referenciales. Las características finales (color, ancho, peso, lote) se confirman al momento de la cotización o pedido. Los precios y la disponibilidad se informan por los canales de contacto.</p>
 <h2>3. Pedidos, muestras y servicios</h2><p>Los pedidos se coordinan con nuestro equipo por WhatsApp, teléfono o correo. El primer servicio es gratuito, pero los adicionales tienen un costo. Se dispone de 30 días para completar el desarrollo; de no cumplirse este plazo, se deberá realizar una devolución o pagar el valor del corte. Las muestras gratuitas son de hasta 1.5 metros; una cantidad mayor tiene costo.</p>
-<h2>4. Envíos</h2><p>Realizamos envíos a todo el Perú. Los costos y tiempos dependen de la ubicación y se informan antes de confirmar el pedido.</p>
+<h2>4. Envíos</h2><p>Realizamos envíos a todo el Perú. El costo del envío, incluido el de las muestras gratis, lo paga el cliente. El precio y el tiempo dependen de la ubicación y se informan antes de enviar.</p>
 <h2>5. Propiedad intelectual</h2><p>Los logotipos, textos e imágenes del sitio pertenecen a New Denim o a sus titulares y no pueden usarse sin autorización.</p>
 <h2>6. Reclamos</h2><p>Puedes presentar un reclamo o queja en nuestro <a href="/libro-de-reclamaciones/">Libro de reclamaciones</a>.</p>
 <h2>7. Contacto</h2><p>Escríbenos a <a href="mailto:${S.mail1}">${S.mail1}</a> o por WhatsApp al ${S.tel1}.</p>`);
